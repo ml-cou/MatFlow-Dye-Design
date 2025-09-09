@@ -43,6 +43,8 @@ function UpdateBuildModelNode({ visible, setVisible, nodeData, nodeId }) {
         onClose={() => setVisible(false)}
         fullScreen={fullScreen}
         scroll="paper"
+        maxWidth="md"
+        fullWidth
       >
         <span
           className="ml-auto p-2 cursor-pointer"
@@ -50,11 +52,11 @@ function UpdateBuildModelNode({ visible, setVisible, nodeData, nodeId }) {
         >
           <CloseIcon color="action" />
         </span>
-        <h1 className="text-center font-medium tracking-wider text-2xl">
+        <h1 className="text-center font-medium tracking-wider text-xl mb-2">
           Edit Model Settings
         </h1>
 
-        <div className="min-w-[500px] mx-auto w-full p-6 py-4">
+        <div className="min-w-[300px] max-w-[600px] mx-auto w-full p-3 py-2">
           <BuildModel
             csvData={nodeData.table}
             nodeData={nodeData}
@@ -64,9 +66,9 @@ function UpdateBuildModelNode({ visible, setVisible, nodeData, nodeId }) {
           />
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t-2 shadow-md border-gray-200 flex items-center gap-4 w-full justify-end px-6 py-3 pt-6 mt-4">
+        <div className="sticky bottom-0 bg-white border-t-2 shadow-md border-gray-200 flex items-center gap-3 w-full justify-end px-4 py-2 mt-2">
           <button
-            className="font-medium border-2 p-2 px-4 text-lg tracking-wider border-gray-500 rounded"
+            className="font-medium border-2 p-1.5 px-3 text-sm tracking-wider border-gray-500 rounded"
             onClick={() => {
               setVisible(false);
             }}
@@ -74,7 +76,7 @@ function UpdateBuildModelNode({ visible, setVisible, nodeData, nodeId }) {
             Close
           </button>
           <button
-            className="font-medium border-2 p-2 px-4 text-lg tracking-wider bg-black text-white rounded"
+            className="font-medium border-2 p-1.5 px-3 text-sm tracking-wider bg-black text-white rounded"
             onClick={() => {
               handleSave();
               setVisible(false);

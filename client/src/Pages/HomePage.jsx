@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import feature_img from "./Feature_collage.svg";
 import { Link } from "react-router-dom";
+import Chatbot from "../Components/Chatbot/Chatbot";
+
 
 const Technologies = [
   "python.png",
@@ -442,6 +444,8 @@ function HomePage() {
           </div>
         </div>
       </footer>
+
+      <Chatbot />
     </div>
   );
 }

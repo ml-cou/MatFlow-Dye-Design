@@ -1930,6 +1930,177 @@ function Docs({ section }) {
         </section>
       </div>
     ),
+    smilesSAS: (
+      <div className="p-8 max-w-4xl mx-auto">
+        <h2 className="mb-6 text-3xl font-bold text-green-600">SMILES to Synthetic Accessibility Score (SAS)</h2>
+        <p className="mb-8 text-lg text-gray-800">
+          Calculate Synthetic Accessibility Scores for SMILES strings using RDKit's SA_Score algorithm. 
+          SAS scores indicate how difficult it is to synthesize a molecule, ranging from 1 (easy) to 10 (very difficult).
+        </p>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            How to Use
+          </h3>
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-blue-800 mb-2">Batch Mode</h4>
+            <ol className="list-decimal list-inside text-blue-700">
+              <li>Upload a CSV file containing SMILES strings</li>
+              <li>Select the column containing your SMILES data</li>
+              <li>Click "CALCULATE BATCH SAS"</li>
+              <li>View results and download data</li>
+            </ol>
+          </div>
+          
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-green-800 mb-2">Individual Mode</h4>
+            <ol className="list-decimal list-inside text-green-700">
+              <li>Enter a single SMILES string (e.g., "CCO", "c1ccccc1")</li>
+              <li>Click "CALCULATE SAS SCORE"</li>
+              <li>View the SAS score and complexity level</li>
+            </ol>
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            Understanding SAS Scores
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-800 mb-2">Low Complexity (1-3)</h4>
+              <p className="text-green-700 text-sm">Simple, drug-like molecules that are easy to synthesize. Examples: ethanol (CCO), benzene (c1ccccc1)</p>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <h4 className="font-semibold text-yellow-800 mb-2">Medium Complexity (4-6)</h4>
+              <p className="text-yellow-700 text-sm">Moderate complexity requiring standard synthesis methods. Examples: functionalized aromatics, simple heterocycles</p>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+              <h4 className="font-semibold text-red-800 mb-2">High Complexity (7-10)</h4>
+              <p className="text-red-700 text-sm">Complex molecules requiring advanced synthesis techniques. Examples: natural products, complex polycycles</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            What You Get
+          </h3>
+          <ul className="list-disc list-inside text-gray-700">
+            <li><strong>Individual Results:</strong> SAS score, complexity level, and interpretation</li>
+            <li><strong>Batch Results:</strong> Complete dataset with SAS scores for all molecules</li>
+            <li><strong>Statistics:</strong> Total processed, success rate, failed calculations</li>
+            <li><strong>Visualizations:</strong> Score distribution, complexity breakdown, and range analysis</li>
+            <li><strong>Data Export:</strong> Download results as CSV with all calculated scores</li>
+          </ul>
+        </section>
+
+
+      </div>
+    ),
+    smilesDft: (
+      <div className="p-8 max-w-4xl mx-auto">
+        <h2 className="mb-6 text-3xl font-bold text-green-600">SMILES to DFT Calculator</h2>
+        <p className="mb-8 text-lg text-gray-800">
+          Calculate Density Functional Theory (DFT) properties for SMILES strings using Psi4 quantum chemistry software. 
+          This tool computes electronic properties including HOMO, LUMO, energy gap, and total energy for molecular structures.
+        </p>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            How to Use
+          </h3>
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-blue-800 mb-2">Batch Processing</h4>
+            <ol className="list-decimal list-inside text-blue-700">
+              <li>Upload a CSV file containing SMILES strings</li>
+              <li>Select the column containing your SMILES data</li>
+              <li>Set the number of molecules to process (Top K)</li>
+              <li>Click "CALCULATE DFT" to start processing</li>
+              <li>Monitor progress and view results</li>
+            </ol>
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            DFT Properties Calculated
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2">Electronic Properties</h4>
+              <ul className="list-disc list-inside text-blue-700 text-sm">
+                <li><strong>HOMO:</strong> Highest Occupied Molecular Orbital energy</li>
+                <li><strong>LUMO:</strong> Lowest Unoccupied Molecular Orbital energy</li>
+                <li><strong>Energy Gap:</strong> HOMO-LUMO gap (band gap)</li>
+                <li><strong>Total Energy:</strong> Hartree-Fock total energy</li>
+              </ul>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-800 mb-2">Processing Status</h4>
+              <ul className="list-disc list-inside text-green-700 text-sm">
+                <li><strong>Success Flag:</strong> Indicates if calculation completed</li>
+                <li><strong>Error Messages:</strong> Details for failed calculations</li>
+                <li><strong>Processing Time:</strong> Time taken for each molecule</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            Configuration Options
+          </h3>
+          <ul className="list-disc list-inside text-gray-700">
+            <li><strong>Top K:</strong> Number of molecules to process from your dataset (default: all molecules)</li>
+            <li><strong>SMILES Column:</strong> Select which column contains your molecular structures</li>
+            <li><strong>Batch Processing:</strong> Handles large datasets efficiently with progress tracking</li>
+            <li><strong>Error Handling:</strong> Continues processing even if some molecules fail</li>
+          </ul>
+        </section>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            Understanding Results
+          </h3>
+          <div className="space-y-4">
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-yellow-800 mb-2">Summary Statistics</h4>
+              <ul className="list-disc list-inside text-yellow-700">
+                <li><strong>Total Processed:</strong> Number of molecules attempted</li>
+                <li><strong>Successful Calculations:</strong> Molecules with valid DFT results</li>
+                <li><strong>Failed Calculations:</strong> Molecules that couldn't be processed</li>
+                <li><strong>Success Rate:</strong> Percentage of successful calculations</li>
+                <li><strong>Average Energy:</strong> Mean total energy across successful calculations</li>
+                <li><strong>Average Gap:</strong> Mean HOMO-LUMO gap across successful calculations</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">Detailed Results</h4>
+              <p className="text-gray-700">
+                Each row shows the original data plus calculated DFT properties. Failed calculations 
+                will show "Not calculated" for DFT properties and include error details.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-10">
+          <h3 className="mb-4 text-2xl font-semibold text-green-500">
+            Technical Details
+          </h3>
+          <ul className="list-disc list-inside text-gray-700">
+            <li><strong>Method:</strong> Hartree-Fock (HF) level of theory using Psi4</li>
+            <li><strong>Basis Set:</strong> Standard basis set for molecular calculations</li>
+            <li><strong>Geometry:</strong> Automatic 3D structure generation from SMILES</li>
+            <li><strong>Convergence:</strong> Standard SCF convergence criteria</li>
+            <li><strong>Processing:</strong> Sequential processing with error handling</li>
+          </ul>
+        </section>
+
+      </div>
+    ),
   };
 
   return content[section];

@@ -393,7 +393,7 @@ function BuildModel({
         );
 
     return (
-        <div className="my-8">
+        <div className="my-2">
             <ToastContainer
                 position="top-right"
                 autoClose={false}
@@ -417,12 +417,12 @@ function BuildModel({
                 <>
                     {type === "function" && (
                         <div
-                            className={`flex items-center gap-8 mt-8 ${
-                                type === "node" && "flex-col !gap-4"
+                            className={`flex flex-col sm:flex-row items-center gap-4 mt-4 ${
+                                type === "node" && "flex-col !gap-2"
                             }`}
                         >
                             <div className="w-full">
-                                <p>{whatKind === "Continuous" ? "Regressor" : "Classifier"}</p>
+                                <p className="text-sm font-medium mb-1">{whatKind === "Continuous" ? "Regressor" : "Classifier"}</p>
                                 <SingleDropDown
                                     columnNames={allRegressor}
                                     onValueChange={(e) => {
@@ -439,7 +439,7 @@ function BuildModel({
                                 <Input
                                     fullWidth
                                     label="Model Name"
-                                    size="lg"
+                                    size="md"
                                     value={model_name}
                                     onChange={(e) => setModelName(e.target.value)}
                                 />
@@ -450,7 +450,7 @@ function BuildModel({
                     {/* Regressor (for Numerical Column) */}
 
                     {whatKind && whatKind === "Continuous" ? (
-                        <div className={`${type === "function" && "mt-12"}`}>
+                        <div className={`${type === "function" && "mt-6"}`}>
                             {regressor === REGRESSOR[0] && (
                                 <LinearRegression
                                     train={train}
@@ -507,7 +507,7 @@ function BuildModel({
                             )}
                         </div>
                     ) : (
-                        <div className={`${type === "function" && "mt-12"}`}>
+                        <div className={`${type === "function" && "mt-6"}`}>
                             {regressor === CLASSIFIER[0] && (
                                 <KNearestNeighbour
                                     train={train}
@@ -568,28 +568,28 @@ function BuildModel({
                     {type === "function" && (
                         <>
                             <button
-                                className={`self-start border-2 px-6 tracking-wider ${
+                                className={`self-start border-2 px-4 tracking-wider ${
                                     !train || !test || train.length === 0 || test.length === 0
                                         ? "bg-gray-400 cursor-not-allowed"
                                         : "bg-primary-btn cursor-pointer"
-                                } text-white font-medium rounded-md py-2 mt-8`}
+                                } text-white font-medium rounded-md py-1.5 mt-4`}
                                 onClick={handleSave}
                                 disabled={!train || !test || train.length === 0 || test.length === 0}
                             >
                                 Submit
                             </button>
                             {nicherData && (
-                                <div className="mt-4">
-                                    <h2 className="text-2xl font-semibold mb-4">
+                                <div className="mt-3">
+                                    <h2 className="text-lg font-semibold mb-2">
                                         Model Performance Metrics
                                     </h2>
-                                    <table className="min-w-full bg-white">
+                                    <table className="min-w-full bg-white text-sm">
                                         <thead>
                                         <tr>
-                                            <th className="py-2 px-4 border-b-2 border-gray-200 text-left leading-tight">
+                                            <th className="py-1 px-3 border-b-2 border-gray-200 text-left leading-tight">
                                                 Metric
                                             </th>
-                                            <th className="py-2 px-4 border-b-2 border-gray-200 text-left leading-tight">
+                                            <th className="py-1 px-3 border-b-2 border-gray-200 text-left leading-tight">
                                                 Value
                                             </th>
                                         </tr>
@@ -597,10 +597,10 @@ function BuildModel({
                                         <tbody>
                                         {Object.entries(nicherData).map(([key, value]) => (
                                             <tr key={key}>
-                                                <td className="py-2 px-4 border-b border-gray-200">
+                                                <td className="py-1 px-3 border-b border-gray-200">
                                                     {key}
                                                 </td>
-                                                <td className="py-2 px-4 border-b border-gray-200">
+                                                <td className="py-1 px-3 border-b border-gray-200">
                                                     {typeof value === "number"
                                                         ? value.toFixed(4)
                                                         : value}
@@ -616,23 +616,23 @@ function BuildModel({
                 </>
             )}
 
-            {/* DOCS */}
-            <button
-                className="fixed bottom-5 right-5 bg-primary-btn text-2xl font-black text-white rounded-full p-4 py-2 shadow-lg"
-                onClick={openModal}
-            >
-                ?
-            </button>
+                  {/* DOCS */}
+      <button
+        className="fixed bottom-16 right-4 bg-primary-btn text-lg font-bold text-white rounded-full w-8 h-8 shadow-lg hover:bg-opacity-90 transition-all flex items-center justify-center"
+        onClick={openModal}
+      >
+        ?
+      </button>
             <Modal
                 open={visible}
                 onClose={closeModal}
                 aria-labelledby="help-modal"
                 aria-describedby="help-modal-description"
-                width="800px"
+                width="600px"
                 scroll
                 closeButton
             >
-                <div className="bg-white text-left rounded-lg shadow-lg px-6 overflow-auto">
+                <div className="bg-white text-left rounded-lg shadow-lg px-4 py-2 overflow-auto max-h-[80vh]">
                     <Docs section={"buildModel"}/>
                 </div>
             </Modal>

@@ -26,7 +26,8 @@ import Docs from "../../../../Docs/Docs";
 
 function SMILESMolecularStructure({ csvData }) {
   // Configuration state
-  const [smilesColumn, setSmilesColumn] = useState("");  const [processingMode, setProcessingMode] = useState("batch"); // batch, individual
+  const [smilesColumn, setSmilesColumn] = useState("");
+  const [processingMode, setProcessingMode] = useState("batch"); // batch, individual
   const [imageSize, setImageSize] = useState(300);
   const [imageFormat, setImageFormat] = useState("png"); // png, svg
   const [maxImages, setMaxImages] = useState(100);
@@ -676,290 +677,312 @@ function SMILESMolecularStructure({ csvData }) {
   };
 
   return (
-    <div className="my-8 w-full">
-      <Typography variant="h4" className="!font-medium !mb-6" gutterBottom>
-        SMILES to Molecular Structure Visualizer
+    <div className="my-6 w-full max-w-7xl mx-auto">
+      <Typography variant="h5" className="!font-semibold !mb-4 !text-text" gutterBottom>
+        SMILES to Molecular Structure Generator
       </Typography>
-
+      
       {/* Processing Mode Selection */}
-      <div className="mb-6">
+      <div className="mb-4">
         <FormControl component="fieldset">
-          <FormLabel component="legend" className="!text-lg !font-medium">
+          <FormLabel component="legend" className="!text-base !font-medium !text-text">
             Processing Mode
-          </FormLabel>          <RadioGroup
+          </FormLabel>
+          <RadioGroup
             value={processingMode}
-            onChange={(e) => {
-              // Clear results and taskId when switching modes
-              setResults(null);
-              setTaskId(null);
-              setPreviewImages([]);
-              // Remove stored taskId from sessionStorage
-              sessionStorage.removeItem('smiles_structure_task_id');
-              sessionStorage.removeItem('smiles_structure_single_image');
-              setProcessingMode(e.target.value);
-            }}
+            onChange={(e) => setProcessingMode(e.target.value)}
+            className="mt-2"
           >
-            <FormControlLabel
-              value="batch"
-              control={<Radio />}
-              label="Batch Processing (from dataset)"
-            />
             <FormControlLabel
               value="individual"
-              control={<Radio />}
+              control={<Radio size="small" />}
               label="Individual SMILES"
+              className="!text-sm"
+            />
+            <FormControlLabel
+              value="batch"
+              control={<Radio size="small" />}
+              label="Batch Processing (from dataset)"
+              className="!text-sm"
             />
           </RadioGroup>
         </FormControl>
-      </div>
-
-      {/* Configuration Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-6 bg-gray-50 rounded-lg">
-        <Typography variant="h6" className="!font-medium col-span-full">
-          Generation Configuration
-        </Typography>
-        
-        <TextField
-          label="Image Size (pixels)"
-          type="number"
-          size="small"
-          value={imageSize}
-          onChange={(e) => setImageSize(parseInt(e.target.value))}
-          InputProps={{ inputProps: { step: 50, min: 100, max: 1000 } }}
-          helperText="Width and height of generated images"
-        />
-        
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Image Format</FormLabel>
-          <RadioGroup
-            value={imageFormat}
-            onChange={(e) => setImageFormat(e.target.value)}
-            row
-          >
-            <FormControlLabel value="png" control={<Radio />} label="PNG" />
-            <FormControlLabel value="svg" control={<Radio />} label="SVG" />
-          </RadioGroup>
-        </FormControl>
-
-        {processingMode === "batch" && (
-          <>
-            <TextField
-              label="Maximum Images"
-              type="number"
-              size="small"
-              value={maxImages}
-              onChange={(e) => setMaxImages(parseInt(e.target.value))}
-              InputProps={{ inputProps: { step: 10, min: 1, max: 1000 } }}              helperText="Limit number of images generated"
-            />
-          </>
-        )}
       </div>
 
       {/* Batch Processing Configuration */}
       {processingMode === "batch" && (
-        <div className="mb-6">
-          <p className="mb-2 font-medium">Select SMILES Column:</p>
-          <SingleDropDown
-            columnNames={availableColumns}
-            onValueChange={setSmilesColumn}
-            initValue={smilesColumn}
-          />
+        <div className="grid grid-cols-1 gap-4 mb-4">
+          <div>
+            <Typography variant="body2" className="!text-text !font-medium mb-2">
+              Select SMILES Column:
+            </Typography>
+            <SingleDropDown
+              columnNames={availableColumns}
+              onValueChange={setSmilesColumn}
+              initValue={smilesColumn}
+            />
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <TextField
+              label="Image Size (px)"
+              type="number"
+              size="small"
+              value={imageSize}
+              onChange={(e) => setImageSize(parseInt(e.target.value))}
+              InputProps={{ inputProps: { step: 50, min: 100, max: 800 } }}
+              helperText="Size of generated molecular images"
+            />
+            <TextField
+              label="Max Images"
+              type="number"
+              size="small"
+              value={maxImages}
+              onChange={(e) => setMaxImages(parseInt(e.target.value))}
+              InputProps={{ inputProps: { step: 10, min: 1, max: 500 } }}
+              helperText="Maximum number of images to generate"
+            />
+            <FormControl fullWidth size="small">
+              <FormLabel component="legend" className="!text-sm !font-medium !text-gray-700">
+                Image Format
+              </FormLabel>
+              <RadioGroup
+                value={imageFormat}
+                onChange={(e) => setImageFormat(e.target.value)}
+                row
+                className="mt-1"
+              >
+                <FormControlLabel
+                  value="png"
+                  control={<Radio size="small" />}
+                  label="PNG"
+                  className="!text-sm"
+                />
+                <FormControlLabel
+                  value="svg"
+                  control={<Radio size="small" />}
+                  label="SVG"
+                  className="!text-sm"
+                />
+              </RadioGroup>
+            </FormControl>
+          </div>
         </div>
       )}
 
-      {/* Individual SMILES Input */}
+      {/* Individual SMILES Processing */}
       {processingMode === "individual" && (
-        <div className="mb-6">
+        <div className="mb-4">
           <TextField
             label="Enter SMILES String"
             fullWidth
+            size="small"
             value={singleSMILES}
             onChange={(e) => setSingleSMILES(e.target.value)}
-            placeholder="e.g., CCO (ethanol), C1=CC=CC=C1 (benzene)"
-            helperText="Enter a single SMILES string to visualize its molecular structure"
+            placeholder="e.g., CCO (ethanol)"
+            helperText="Enter a single SMILES string to generate molecular structure"
+            className="!mb-3"
           />
+          
+          {/* Sample SMILES for testing */}
+          <div className="mt-2">
+            <Typography variant="body2" className="!text-gray-600 mb-2 !text-sm">
+              Sample SMILES for testing:
+            </Typography>
+            <div className="flex flex-wrap gap-2">
+              {['CCO', 'CC(C)O', 'c1ccccc1', 'CC(=O)O', 'CCN(CC)CC'].map((sample) => (
+                <button
+                  key={sample}
+                  onClick={() => setSingleSMILES(sample)}
+                  className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors border border-blue-200"
+                >
+                  {sample}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <TextField
+              label="Image Size (px)"
+              type="number"
+              size="small"
+              value={imageSize}
+              onChange={(e) => setImageSize(parseInt(e.target.value))}
+              InputProps={{ inputProps: { step: 50, min: 100, max: 800 } }}
+              helperText="Size of generated molecular image"
+            />
+            <FormControl size="small">
+              <FormLabel component="legend" className="!text-sm !font-medium !text-gray-700">
+                Image Format
+              </FormLabel>
+              <RadioGroup
+                value={imageFormat}
+                onChange={(e) => setImageFormat(e.target.value)}
+                row
+                className="mt-1"
+              >
+                <FormControlLabel
+                  value="png"
+                  control={<Radio size="small" />}
+                  label="PNG"
+                  className="!text-sm"
+                />
+                <FormControlLabel
+                  value="svg"
+                  control={<Radio size="small" />}
+                  label="SVG"
+                  className="!text-sm"
+                />
+              </RadioGroup>
+            </FormControl>
+          </div>
         </div>
       )}
 
       {/* Generate Button */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-4">
         <Button
           variant="contained"
-          size="large"
+          size="medium"
           onClick={processingMode === "batch" ? handleBatchGeneration : handleSingleGeneration}
           disabled={loading || (processingMode === "batch" && !smilesColumn) || (processingMode === "individual" && !singleSMILES.trim())}
-          className="!bg-primary-btn !text-white !font-medium !px-8 !py-3"
+          className="!bg-primary-btn !text-white !font-medium !px-6 !py-2 !text-sm"
         >
-          {loading ? "Generating..." : "Generate Structures"}
+          {loading ? "Generating..." : "GENERATE MOLECULAR STRUCTURE"}
         </Button>
       </div>
 
       {/* Progress Bar */}
       {loading && (
-        <div className="mb-6">
-          <Progress
-            value={progress}
-            shadow
-            color="success"
-            status="secondary"
-            striped
-          />
-          {currentProcessing && (
-            <p className="text-center mt-2 text-gray-600">
-              {currentProcessing}
-            </p>
-          )}
-        </div>
-      )}      {/* Success status indicator and preview (when available) */}
-      {previewImages.length > 0 && (
-        <div className="mb-6">
-          {/* Only show completion status when results match the current processing mode */}
-          {((processingMode === "batch" && results && !results.single_mode) || 
-            (processingMode === "individual" && results && results.single_mode)) && (
-            <div className="flex items-center justify-center bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <svg className="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <Typography variant="body1" className="text-green-800 font-medium">
-                Generation complete
-              </Typography>
+        <div className="mb-4 p-8 bg-white rounded-lg border border-gray-300 shadow-lg">
+          <div className="flex flex-col items-center justify-center">
+            {/* Lazy Loading Animation */}
+            <div className="relative w-16 h-16 mb-4">
+              <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary-btn rounded-full border-t-transparent animate-spin"></div>
             </div>
-          )}
-            {/* Display image preview for single SMILES mode - supports direct_url, image_base64, and path */}
-          {processingMode === "individual" && previewImages[0] && (
-            <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-              <Typography variant="h6" className="!font-medium !mb-3">
-                Molecular Structure Preview
+            <Typography variant="body1" className="!text-text !text-center !mb-2 !font-medium">
+              Generating molecular structures...
+            </Typography>
+            {currentProcessing && (
+              <Typography variant="body2" className="!text-gray-600 !text-center">
+                {currentProcessing}
               </Typography>
-              <div className="flex justify-center bg-white p-6">
-                {previewImages[0].direct_url && (
-                  <img 
-                    src={previewImages[0].direct_url} 
-                    alt={`Molecular structure for ${previewImages[0].smiles}`}
-                    className="max-h-[300px] object-contain"
-                  />
-                )}
-                {previewImages[0].image_base64 && (
-                  <img 
-                    src={`data:image/${imageFormat};base64,${previewImages[0].image_base64}`}
-                    alt={`Molecular structure for ${previewImages[0].smiles}`}
-                    className="max-h-[300px] object-contain"
-                  />
-                )}
-                {previewImages[0].path && !previewImages[0].direct_url && !previewImages[0].image_base64 && (
-                  <img 
-                    src={`${import.meta.env.VITE_APP_API_URL}${previewImages[0].path.startsWith('/') ? '' : '/'}${previewImages[0].path}`}
-                    alt={`Molecular structure for ${previewImages[0].smiles}`}
-                    className="max-h-[300px] object-contain"
-                  />
-                )}
-              </div>
-              <Typography variant="caption" className="block mt-2 text-center text-gray-600">
-                {previewImages[0].smiles}
-              </Typography>
-              
-              {/* Download button for the current image */}
-              <div className="flex justify-center mt-4">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  startIcon={<ImageIcon />}
-                  onClick={() => {
-                    let downloadUrl;
-                    let fileName = `molecule_${previewImages[0].smiles.replace(/[^a-zA-Z0-9]/g, '_')}.${imageFormat}`;
-                    
-                    if (previewImages[0].direct_url) {
-                      downloadUrl = previewImages[0].direct_url;
-                    } else if (previewImages[0].image_base64) {
-                      downloadUrl = `data:image/${imageFormat};base64,${previewImages[0].image_base64}`;
-                    } else if (previewImages[0].path) {
-                      // For path-based URLs, use the API URL prefix
-                      downloadUrl = `${import.meta.env.VITE_APP_API_URL}${previewImages[0].path.startsWith('/') ? '' : '/'}${previewImages[0].path}`;
-                    } else {
-                      toast.error("No image available for download");
-                      return;
-                    }
-                    
-                    // Create a link element and trigger download
-                    const link = document.createElement("a");
-                    link.href = downloadUrl;
-                    link.download = fileName;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    toast.success("Image downloaded successfully!");
-                  }}
-                  className="!bg-blue-600 !text-white"
-                >
-                  Download Image
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      )}      {/* Results Display - Only shown for batch mode AND when results are batch results */}
-      {results && processingMode === "batch" && !results.single_mode && (
-        <div className="mt-8">
-          <Typography variant="h4" className="!font-medium !mb-6" gutterBottom>
-            Generation Results
+      )}
+
+      {/* Results Display */}
+      {results && (
+        <div className="mt-6">
+          <Typography variant="h6" className="!font-semibold !mb-4 !text-text" gutterBottom>
+            Molecular Structure Generation Results
           </Typography>
 
           {/* Summary Statistics for Batch */}
-          {results.summary && (
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <Typography variant="h6" className="!font-medium">
+          {processingMode === "batch" && results.summary && (
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="bg-white p-3 rounded-lg border border-gray-300 shadow-sm">
+                <Typography variant="body2" className="!font-medium !text-text !mb-1">
                   Total SMILES
                 </Typography>
-                <Typography variant="h4" className="!text-blue-600">
+                <Typography variant="h6" className="!text-primary-btn !font-bold">
                   {results.summary.total_smiles || 0}
                 </Typography>
               </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <Typography variant="h6" className="!font-medium">
-                  Valid Structures
+              <div className="bg-white p-3 rounded-lg border border-gray-300 shadow-sm">
+                <Typography variant="body2" className="!font-medium !text-text !mb-1">
+                  Successfully Generated
                 </Typography>
-                <Typography variant="h4" className="!text-green-600">
-                  {results.summary.valid_structures || 0}
-                </Typography>
-              </div>
-              <div className="bg-red-50 p-4 rounded-lg">
-                <Typography variant="h6" className="!font-medium">
-                  Invalid SMILES
-                </Typography>
-                <Typography variant="h4" className="!text-red-600">
-                  {results.summary.invalid_smiles || 0}
+                <Typography variant="h6" className="!text-primary-btn !font-bold">
+                  {results.summary.successful_generations || 0}
                 </Typography>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <Typography variant="h6" className="!font-medium">
+              <div className="bg-white p-3 rounded-lg border border-gray-300 shadow-sm">
+                <Typography variant="body2" className="!font-medium !text-text !mb-1">
+                  Failed Generations
+                </Typography>
+                <Typography variant="h6" className="!text-danger-btn !font-bold">
+                  {results.summary.failed_generations || 0}
+                </Typography>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-gray-300 shadow-sm">
+                <Typography variant="body2" className="!font-medium !text-text !mb-1">
                   Success Rate
                 </Typography>
-                <Typography variant="h4" className="!text-purple-600">
+                <Typography variant="h6" className="!text-primary-btn !font-bold">
                   {results.summary.success_rate || 0}%
                 </Typography>
-              </div>            </div>
+              </div>
+            </div>
           )}
-            {/* Download Links - Only shown for batch mode AND when results are batch results */}
+
+          {/* Individual Result */}
+          {processingMode === "individual" && (
+            <div className="mb-4 p-4 bg-white rounded-lg border border-gray-300 shadow-sm">
+              <Typography variant="subtitle1" className="!font-medium !mb-3 !text-text">
+                Individual Molecular Structure Result
+              </Typography>
+              
+              {results && (
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex">
+                      <span className="font-semibold w-32 !text-text">SMILES:</span>
+                      <span className="!text-primary-btn font-mono">{results.smiles || "Not available"}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="font-semibold w-32 !text-text">Image Size:</span>
+                      <span className="!text-primary-btn font-medium">{imageSize}px</span>
+                    </div>
+                    <div className="flex">
+                      <span className="font-semibold w-32 !text-text">Format:</span>
+                      <span className="!text-primary-btn font-medium">{imageFormat.toUpperCase()}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Preview Image */}
+                  {results.image_url && (
+                    <div className="mt-4">
+                      <Typography variant="body2" className="!font-medium !text-gray-700 !mb-2">
+                        Generated Structure:
+                      </Typography>
+                      <div className="flex justify-center">
+                        <img
+                          src={results.image_url}
+                          alt="Molecular Structure"
+                          style={{ width: imageSize, height: imageSize }}
+                          className="border border-gray-200 rounded-md"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Download Links - Only shown for batch mode AND when results are batch results */}
           {taskId && processingMode === "batch" && results && !results.single_mode && (
-            <div className="mb-6 p-8 bg-gray-50 rounded-lg shadow border border-gray-200">
-              <Typography variant="h6" className="!font-medium !mb-4 flex items-center">
-                <CloudDownloadIcon className="mr-2" />
+            <div className="mb-6 p-8 bg-white rounded-lg shadow-lg border border-gray-300">
+              <Typography variant="h6" className="!font-medium !mb-4 flex items-center !text-text">
+                <CloudDownloadIcon className="mr-2 !text-primary-btn" />
                 Download Options
               </Typography>
               <div className="flex flex-wrap gap-6">
                 {/* ZIP download button */}
                 <Button
                   variant="contained"
-                  color="secondary"
                   size="large"
                   startIcon={<CloudDownloadIcon />}
                   endIcon={<span>📦</span>}
                   onClick={handleDownloadZip}
-                  className="!bg-purple-600 !text-white !px-8 !py-3 !text-base"
+                  className="!bg-primary-btn !text-white !px-8 !py-3 !text-base hover:!bg-opacity-90 transition-all duration-300"
                 >
-                  Download All Images as ZIP                </Button>
+                  Download All Images as ZIP
+                </Button>
               </div>
             </div>
           )}
@@ -1053,7 +1076,7 @@ function SMILESMolecularStructure({ csvData }) {
 
       {/* Help Button */}
       <button
-        className="fixed bottom-5 right-5 bg-primary-btn text-2xl font-black text-white rounded-full p-4 py-2 shadow-lg"
+        className="fixed bottom-20 right-5 bg-primary-btn text-xl font-bold text-white rounded-full w-10 h-10 shadow-lg hover:bg-opacity-90 transition-all flex items-center justify-center"
         onClick={openModal}
       >
         ?

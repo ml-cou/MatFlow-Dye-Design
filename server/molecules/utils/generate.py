@@ -122,6 +122,10 @@ class VAE(Model):
 
 
 # ─── High-level public helper -----------------------------------------
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
+# ─── High-level public helper -----------------------------------------
 def generate_smiles(
         *,
         dataset: List[Dict[str, Any]] = None,
@@ -137,12 +141,18 @@ def generate_smiles(
     Main entry point called by the DRF view.
     Returns a list of dicts, each serialisable to JSON.
     """
+
+    logger.info("==== [generate_smiles] starting ====")
+    logger.debug(f"training_mode={training_mode}, smiles_column={smiles_column}, epsilon_column={epsilon_column}")
+    logger.debug(f"vae_config={vae_config}, training_config={training_config}")
+
     # ---- prepare configs ------------------------------------------------
     vcfg = VAEConfig(**vae_config)
     tcfg = TrainCfg(**training_config)
 
     # Handle separate datasets or original single dataset
     if train_dataset is not None and test_dataset is not None:
+        logger.info(f"Using train/test datasets: train={len(train_dataset)}, test={len(test_dataset)}")
         df_train = pd.DataFrame(train_dataset)
         df_test = pd.DataFrame(test_dataset)
 
@@ -150,23 +160,29 @@ def generate_smiles(
             raise ValueError(f"smiles_column '{smiles_column}' not in train dataset")
 
         smiles_train = df_train[smiles_column].dropna().tolist()
+        logger.info(f"Loaded {len(smiles_train)} SMILES from train dataset")
 
         # Build vocab only from training data
         toks_train = [tokenize(s) for s in smiles_train]
         tok2i, i2tok = build_vocab(toks_train)
         max_len = max(map(len, toks_train))
+        logger.info(f"Vocab size={len(tok2i)}, max_len={max_len}")
 
         X_train = encode(toks_train, tok2i, max_len)
+        logger.info(f"Encoded training set shape={X_train.shape}")
+
         # Create validation set by splitting training data
         X_train_split, X_val = train_test_split(
             X_train, test_size=tcfg.test_size, random_state=tcfg.random_state
         )
+        logger.info(f"Train split={X_train_split.shape}, Val split={X_val.shape}")
 
         # Use test dataset for epsilon values
         eps_series = df_test[epsilon_column] if epsilon_column and epsilon_column in df_test else pd.Series()
+        logger.info(f"Epsilon series length={len(eps_series)}")
 
     else:
-        # Backward compatibility: use original single dataset approach
+        logger.info("Using single dataset mode")
         if dataset is None:
             raise ValueError("Either provide 'dataset' or both 'train_dataset' and 'test_dataset'")
 
@@ -175,22 +191,31 @@ def generate_smiles(
             raise ValueError(f"smiles_column '{smiles_column}' not in payload")
 
         smiles_list = df[smiles_column].dropna().tolist()
+        logger.info(f"Loaded {len(smiles_list)} SMILES from dataset")
+
         toks = [tokenize(s) for s in smiles_list]
         tok2i, i2tok = build_vocab(toks)
         max_len = max(map(len, toks))
-        enc_all = encode(toks, tok2i, max_len)
+        logger.info(f"Vocab size={len(tok2i)}, max_len={max_len}")
 
-        # ---- train/val split -------------------------------------------------
+        enc_all = encode(toks, tok2i, max_len)
+        logger.info(f"Encoded dataset shape={enc_all.shape}")
+
         X_train_split, X_val = train_test_split(
             enc_all, test_size=tcfg.test_size, random_state=tcfg.random_state
         )
+        logger.info(f"Train split={X_train_split.shape}, Val split={X_val.shape}")
 
         eps_series = df[epsilon_column] if epsilon_column and epsilon_column in df else pd.Series()
+        logger.info(f"Epsilon series length={len(eps_series)}")
 
+    # ---- model build ----------------------------------------------------
     encoder = build_encoder(max_len, len(tok2i) + 1, vcfg)
     decoder = build_decoder(max_len, len(tok2i) + 1, vcfg)
     vae = VAE(encoder, decoder)
     vae.compile(Adam(vcfg.learning_rate))
+    logger.info("Model compiled. Starting training...")
+
     vae.fit(
         X_train_split,
         epochs=vcfg.epochs,
@@ -198,23 +223,43 @@ def generate_smiles(
         validation_data=(X_val,),
         verbose=0,
     )
+    logger.info("Training finished")
 
     # ---- sample latent --------------------------------------------------
     z_m, z_lv, _ = encoder.predict(X_val, verbose=0)
+    logger.debug(f"Latent mean shape={z_m.shape}, logvar shape={z_lv.shape}")
     z = z_m + tf.exp(0.5 * z_lv) * tf.random.normal(tf.shape(z_m))
     logits = decoder.predict(z, verbose=0)
+    logger.info(f"Generated logits shape={logits.shape}")
+
     smi_out = ["".join(i2tok.get(i, "") for i in row.argmax(1) if i) for row in logits]
+    logger.info(f"Decoded {len(smi_out)} candidate SMILES")
 
     # ---- ring filter ----------------------------------------------------
     result: list[dict[str, Any]] = []
+    valid_count = 0
+    ring_count = 0
+    total_generated = len(smi_out)
+
     for i, s in enumerate(smi_out):
         mol = Chem.MolFromSmiles(s)
-        if not mol or mol.GetRingInfo().NumRings() == 0:
-            continue
-        result.append({
-            "Generated_SMILES": s,
-            "Formula": rdMolDescriptors.CalcMolFormula(mol),
-            "Epsilon": eps_series.iloc[i % len(eps_series)] if not eps_series.empty else None,
-            "Validity": 1,
-        })
+        logger.debug(f"{i}: raw='{s}' -> mol={mol}")
+        if mol:
+            valid_count += 1
+            rings = mol.GetRingInfo().NumRings()
+            if rings > 0:
+                ring_count += 1
+                logger.info(f"{i}: VALID with {rings} ring(s): {s}")
+                result.append({
+                    "Generated_SMILES": s,
+                    "Formula": rdMolDescriptors.CalcMolFormula(mol),
+                    "Epsilon": eps_series.iloc[i % len(eps_series)] if not eps_series.empty else None,
+                    "Validity": 1,
+                })
+            else:
+                logger.debug(f"{i}: valid molecule but no rings: {s}")
+
+    logger.info(f"Generated: {total_generated}, Valid: {valid_count}, With rings: {ring_count}")
+    logger.info("==== [generate_smiles] finished ====")
+
     return result

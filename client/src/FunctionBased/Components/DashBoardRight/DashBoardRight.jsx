@@ -41,6 +41,8 @@ import Imputation from '../../Functions/Feature Engineering/Imputation/Imputatio
 import PSO from '../../Functions/InvML/PSO';
 import SMILESGeneration from '../../Functions/InvML/SMILESGeneration/SMILESGeneration';
 import SMILEStoIUPAC from '../../Functions/InvML/SMILEStoIUPAC/SMILEStoIUPAC';
+import SMILESToSAS from '../../Functions/InvML/SMILESToSAS/SMILESToSAS';
+import SMILESToDFT from '../../Functions/InvML/SMILESToDFT/SMILESToDFT';
 import SMILESMolecularStructure from '../../Functions/InvML/SMILESMolecularStructure/SMILESMolecularStructure';
 import VennDiagram from '../../Functions/EDA/VennDiagram.jsx';
 import ScalerEvaluationPage from '../../Functions/InvML/BestScaler/ScalerEvaluation.jsx';
@@ -256,6 +258,16 @@ function DashBoardRight() {
             activeFunction === 'SMILES to IUPAC' && (
               <SMILEStoIUPAC csvData={csvData} />
             )}
+          {csvData &&
+            activeFunction &&
+            activeFunction === 'SMILES to SAS' && (
+              <SMILESToSAS csvData={csvData} />
+            )}
+                {csvData &&
+                  activeFunction &&
+                  activeFunction === 'SMILES to DFT' && (
+                    <SMILESToDFT csvData={csvData} />
+                  )}
           {csvData && activeFunction && activeFunction === 'Best Scaler' && (
             <ScalerEvaluationPage csvData={csvData} />
           )}

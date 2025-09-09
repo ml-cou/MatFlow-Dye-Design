@@ -137,7 +137,7 @@ class MLOptimizer:
         self._train_models()
 
     def _set_default_pso_config(self, pso_config):
-        """Set default PSO configuration"""
+        """Set default PSO configuration with robust bounds calculation"""
         defaults = {
             'swarmsize': 30,
             'omega': 0.5,
@@ -153,17 +153,52 @@ class MLOptimizer:
         if 'lb' not in pso_config or 'ub' not in pso_config:
             lb = self.X[self.features].min().tolist()
             ub = self.X[self.features].max().tolist()
+
+            # More robust bounds calculation
             for i in range(len(lb)):
                 if ub[i] <= lb[i]:
-                    # Add small margin to ensure proper bounds
-                    margin = max(0.1, abs(lb[i]) * 0.1)
-                    ub[i] = lb[i] + margin
+                    # Handle case where min == max (constant feature)
+                    if lb[i] == 0:
+                        # If value is 0, use symmetric bounds
+                        lb[i] = -1.0
+                        ub[i] = 1.0
+                    elif lb[i] > 0:
+                        # For positive values, create bounds around the value
+                        margin = max(1.0, abs(lb[i]) * 0.5)  # 50% margin
+                        lb[i] = lb[i] - margin
+                        ub[i] = lb[i] + 2 * margin  # lb[i] was modified, so add 2*margin
+                    else:
+                        # For negative values
+                        margin = max(1.0, abs(lb[i]) * 0.5)  # 50% margin
+                        ub[i] = lb[i] + margin
+                        lb[i] = lb[i] - margin
+                else:
+                    # Even when ub > lb, add some padding for better exploration
+                    range_val = ub[i] - lb[i]
+                    padding = max(0.1, range_val * 0.1)  # 10% padding
+                    lb[i] = lb[i] - padding
+                    ub[i] = ub[i] + padding
+
+            # Final validation to ensure all bounds are valid
+            for i in range(len(lb)):
+                if ub[i] <= lb[i]:
+                    print(f"Warning: Invalid bounds for feature {self.features[i]}: lb={lb[i]}, ub={ub[i]}")
+                    # Fallback: create reasonable bounds
+                    center = (lb[i] + ub[i]) / 2 if not np.isnan(lb[i] + ub[i]) else 0
+                    lb[i] = center - 1.0
+                    ub[i] = center + 1.0
+                    print(f"Fixed bounds for feature {self.features[i]}: lb={lb[i]}, ub={ub[i]}")
 
             pso_config['lb'] = lb
             pso_config['ub'] = ub
 
         # Update defaults with provided config
         defaults.update(pso_config)
+
+        # Debug print for verification
+        print(f"PSO Bounds - LB: {defaults['lb']}")
+        print(f"PSO Bounds - UB: {defaults['ub']}")
+
         return defaults
 
     def _train_models(self):

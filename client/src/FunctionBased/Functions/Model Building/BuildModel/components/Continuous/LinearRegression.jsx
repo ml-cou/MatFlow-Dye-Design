@@ -93,11 +93,11 @@ function LinearRegression({
     <div>
       {Type === "function" && (
         <div>
-          <h1 className="text-2xl font-medium tracking-wide mb-2">
+          <h1 className="text-lg font-medium tracking-wide mb-2">
             Hyperparameter Optimization Settings
           </h1>
-          <div className="flex gap-8">
-            <div className="flex flex-1 flex-col gap-4 justify-center">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex flex-1 flex-col gap-2 justify-center">
               <div className="w-full">
                 <p className="mb-1">Number of cross-validation folds</p>
                 <Input
@@ -153,7 +153,7 @@ function LinearRegression({
             </div>
           </div>
           <button
-            className="self-start border-2 px-4 tracking-wider border-primary-btn text-black font-medium text-sm rounded-md py-2 mt-6"
+            className="self-start border-2 px-3 tracking-wider border-primary-btn text-black font-medium text-sm rounded-md py-1.5 mt-3"
             onClick={handleOptimization}
             disabled={loading}
           >
@@ -161,17 +161,17 @@ function LinearRegression({
           </button>
         </div>
       )}
-      <div className="mt-8">
+      <div className="mt-4">
         {Type === "function" && (
-          <h1 className="text-2xl font-medium tracking-wide mb-3">
+          <h1 className="text-lg font-medium tracking-wide mb-2">
             Model Settings
           </h1>
         )}
         <div
           className={`${
             Type === "function"
-              ? "flex items-center gap-8"
-              : "grid grid-cols-2 gap-4"
+              ? "flex flex-col sm:flex-row items-center gap-4"
+              : "grid grid-cols-1 sm:grid-cols-2 gap-3"
           }`}
         >
           <Input
@@ -203,8 +203,8 @@ function LinearRegression({
             Fit Intercept
           </Checkbox>
         </div>
-        <div className="mt-4">
-          <p className="mb-2">Display Metrices</p>
+        <div className="mt-3">
+          <p className="mb-1 text-sm">Display Metrices</p>
           <MultipleDropDown
             columnNames={DISPLAY_METRICES}
             defaultValue={optimizedData["Display Metrices"]}

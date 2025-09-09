@@ -1,6 +1,7 @@
 import { React, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Chatbot from "../Components/Chatbot/Chatbot";
 function Register() {
   const navigate = useNavigate();
   const [user, setUser] = useState({
@@ -105,6 +106,7 @@ function Register() {
           </button>
         </form>
       </div>
+      <Chatbot />
     </div>
   );
 }

@@ -3,8 +3,6 @@ from celery.result import AsyncResult
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from torch.distributed.elastic.timer import expires
-
 from molecules.utils.iupac import lookup_iupac
 from ..tasks.iupac import process_smiles_batch
 

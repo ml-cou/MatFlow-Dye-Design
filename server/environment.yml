@@ -1,0 +1,46 @@
+name: server
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10
+  - pandas=2.2.3
+  - matplotlib=3.9.4
+  - seaborn=0.13.2
+  - plotly=5.14.1
+  - django=5.1.7
+  - djangorestframework=3.14.0
+  - scipy=1.13.1
+  - scikit-learn=1.5.2
+  - celery=5.4.0
+  - django-cors-headers=4.3.1
+  - joblib=1.4.2
+  - rdkit=2022.09.5
+  - tqdm=4.66.6
+  - statsmodels=0.14.5
+  - networkx=3.4.2
+  - upsetplot=0.9.0
+  - matplotlib-venn=1.1.2
+  - catboost=1.2.8
+  - pubchempy=1.0.4
+  - redis-py=6.4.0
+  - dask=2024.8.0
+  - ipython=8.29.0
+  - psi4=1.8
+  # PyTorch (CPU)
+  - cpuonly
+  - pytorch=2.0.1
+  - torchvision=0.15.2
+  - torchaudio=2.0.2
+  - xgboost=2.1.4
+  - py-xgboost=2.1.4
+  - libxgboost=2.1.4
+  - pip
+  - pip:
+      - category-encoders==2.6.4
+      - pyswarm==0.6
+      - numpyencoder==0.3.2
+      - pdfminer.six==20231228
+      - lazypredict==0.2.16
+      - tensorflow==2.12.1
+      - numpy==1.24.3

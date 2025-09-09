@@ -4,6 +4,7 @@ import {
   TextField,
   Button
 } from "@mui/material";
+import DownloadIcon from '@mui/icons-material/Download';
 import { Progress, Modal } from "@nextui-org/react";
 import { toast } from "react-toastify";
 import SingleDropDown from "../../../Components/SingleDropDown/SingleDropDown";
@@ -15,7 +16,7 @@ import { ReadFile } from "../../../../util/utils";
 // Custom Slider Component
 const CustomSlider = ({ label, value, onChange, min, max, step }) => (
   <div className="mb-4">
-    <Typography variant="body2" className="mb-2">
+    <Typography variant="body2" className="!text-gray-700 !font-medium mb-2">
       {label}: {value}
     </Typography>
     <input
@@ -25,8 +26,12 @@ const CustomSlider = ({ label, value, onChange, min, max, step }) => (
       step={step}
       value={value}
       onChange={(e) => onChange(e, parseFloat(e.target.value))}
-      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
     />
+    <div className="flex justify-between text-xs text-gray-500 mt-1">
+      <span>{min}</span>
+      <span>{max}</span>
+    </div>
   </div>
 );
 
@@ -328,153 +333,239 @@ function SMILESGeneration({ csvData }) {
     }
   };
 
+  // Download function for results
+  const handleDownloadResults = () => {
+    if (!results) {
+      toast.error("No results to download");
+      return;
+    }
+
+    try {
+      // Convert results to CSV format
+      let csvContent = "";
+      
+      // Handle different result formats
+      let dataToExport = [];
+      
+      if (Array.isArray(results)) {
+        // Direct array of results
+        dataToExport = results;
+      } else if (results.generated_smiles && Array.isArray(results.generated_smiles)) {
+        // Results with generated_smiles property
+        dataToExport = results.generated_smiles;
+      } else {
+        // Fallback to results object
+        dataToExport = [results];
+      }
+
+      if (dataToExport.length === 0) {
+        toast.error("No data to download");
+        return;
+      }
+
+      // Get headers from first object
+      const headers = Object.keys(dataToExport[0]);
+      
+      // Add headers to CSV
+      csvContent += headers.join(',') + '\n';
+      
+      // Add data rows
+      dataToExport.forEach(row => {
+        const values = headers.map(header => {
+          const value = row[header];
+          // Handle special characters and wrap in quotes if needed
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value || '';
+        });
+        csvContent += values.join(',') + '\n';
+      });
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'smiles_generation_results.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success("Results downloaded successfully!");
+    } catch (error) {
+      console.error('Error downloading results:', error);
+      toast.error("Error downloading results");
+    }
+  };
+
   return (
-    <div className="my-8 w-full">
-      <Typography variant="h4" className="!font-medium !mb-6" gutterBottom>
-        SMILES Generation using AutoVAE
-      </Typography>
+         <div className="my-6 w-full max-w-7xl mx-auto">
+       <Typography variant="h5" className="!font-semibold !mb-4 text-gray-800" gutterBottom>
+         SMILES Generation using AutoVAE
+       </Typography>
 
       {/* Dataset Configuration */}
-      <Typography variant="h5" className="!mt-6 !font-medium" gutterBottom>
-        Dataset Configuration
-      </Typography>
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div>
-          <p className="mb-2">Select Train Dataset:</p>
-          <SingleDropDown
-            columnNames={availableDatasets}
-            onValueChange={handleTrainDatasetChange}
-            initValue={trainDataset}
-          />
-        </div>
-        <div>
-          <p className="mb-2">Select Test Dataset:</p>
-          <SingleDropDown
-            columnNames={["None", ...availableDatasets]}
-            onValueChange={handleTestDatasetChange}
-            initValue={testDataset || "None"}
-          />
+      <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+        <Typography variant="subtitle1" className="!font-medium !mb-3 !text-gray-800">
+          Dataset Configuration
+        </Typography>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Typography variant="body2" className="!text-gray-700 !font-medium mb-2">
+              Select Train Dataset:
+            </Typography>
+            <SingleDropDown
+              columnNames={availableDatasets}
+              onValueChange={handleTrainDatasetChange}
+              initValue={trainDataset}
+            />
+          </div>
+          <div>
+            <Typography variant="body2" className="!text-gray-700 !font-medium mb-2">
+              Select Test Dataset:
+            </Typography>
+            <SingleDropDown
+              columnNames={["None", ...availableDatasets]}
+              onValueChange={handleTestDatasetChange}
+              initValue={testDataset || "None"}
+            />
+          </div>
         </div>
       </div>
 
-
       {/* SMILES and Epsilon Columns */}
-      <Typography variant="h5" className="!mt-6 !font-medium" gutterBottom>
-        Column Configuration
-      </Typography>
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <div>
-          <p className="mb-2">Select SMILES Column:</p>
-          <SingleDropDown
-            columnNames={availableColumns}
-            onValueChange={setSmilesColumn}
-            initValue={smilesColumn}
-          />
-        </div>
-        <div>
-          <p className="mb-2">Select Epsilon Column (Optional):</p>
-          <SingleDropDown
-            columnNames={["None", ...availableColumns]}
-            onValueChange={(value) => setEpsilonColumn(value === "None" ? "" : value)}
-            initValue={epsilonColumn || "None"}
-          />
+      <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+        <Typography variant="subtitle1" className="!font-medium !mb-3 !text-gray-800">
+          Column Configuration
+        </Typography>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Typography variant="body2" className="!text-gray-700 !font-medium mb-2">
+              Select SMILES Column:
+            </Typography>
+            <SingleDropDown
+              columnNames={availableColumns}
+              onValueChange={setSmilesColumn}
+              initValue={smilesColumn}
+            />
+          </div>
+          <div>
+            <Typography variant="body2" className="!text-gray-700 !font-medium mb-2">
+              Select Epsilon Column (Optional):
+            </Typography>
+            <SingleDropDown
+              columnNames={["None", ...availableColumns]}
+              onValueChange={(value) => setEpsilonColumn(value === "None" ? "" : value)}
+              initValue={epsilonColumn || "None"}
+            />
+          </div>
         </div>
       </div>
 
       {/* VAE Hyperparameters */}
-      <Typography variant="h5" className="!mt-6 !font-medium" gutterBottom>
-        VAE Configuration
-      </Typography>
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <CustomSlider
-          label="Latent Dimension"
-          value={latentDim}
-          onChange={(e, v) => setLatentDim(v)}
-          min={32}
-          max={256}
-          step={16}
-        />
-        <CustomSlider
-          label="Epochs"
-          value={epochs}
-          onChange={(e, v) => setEpochs(v)}
-          min={10}
-          max={200}
-          step={10}
-        />
-        <CustomSlider
-          label="Batch Size"
-          value={batchSize}
-          onChange={(e, v) => setBatchSize(v)}
-          min={16}
-          max={256}
-          step={16}
-        />
-        <TextField
-          label="Learning Rate"
-          type="number"
-          size="small"
-          value={learningRate}
-          onChange={(e) => setLearningRate(parseFloat(e.target.value))}
-          InputProps={{ inputProps: { step: 0.0001, min: 0.0001, max: 0.01 } }}
-        />
-        <CustomSlider
-          label="Embedding Dimension"
-          value={embeddingDim}
-          onChange={(e, v) => setEmbeddingDim(v)}
-          min={64}
-          max={512}
-          step={32}
-        />
-        <CustomSlider
-          label="LSTM Units"
-          value={lstmUnits}
-          onChange={(e, v) => setLstmUnits(v)}
-          min={64}
-          max={512}
-          step={32}
-        />
+      <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+        <Typography variant="subtitle1" className="!font-medium !mb-3 !text-gray-800">
+          VAE Configuration
+        </Typography>
+        <div className="grid grid-cols-2 gap-4">
+          <CustomSlider
+            label="Latent Dimension"
+            value={latentDim}
+            onChange={(e, v) => setLatentDim(v)}
+            min={32}
+            max={256}
+            step={16}
+          />
+          <CustomSlider
+            label="Epochs"
+            value={epochs}
+            onChange={(e, v) => setEpochs(v)}
+            min={10}
+            max={200}
+            step={10}
+          />
+          <CustomSlider
+            label="Batch Size"
+            value={batchSize}
+            onChange={(e, v) => setBatchSize(v)}
+            min={16}
+            max={256}
+            step={16}
+          />
+          <TextField
+            label="Learning Rate"
+            type="number"
+            size="small"
+            value={learningRate}
+            onChange={(e) => setLearningRate(parseFloat(e.target.value))}
+            InputProps={{ inputProps: { step: 0.0001, min: 0.0001, max: 0.01 } }}
+            helperText="Learning rate for training"
+          />
+          <CustomSlider
+            label="Embedding Dimension"
+            value={embeddingDim}
+            onChange={(e, v) => setEmbeddingDim(v)}
+            min={64}
+            max={512}
+            step={32}
+          />
+          <CustomSlider
+            label="LSTM Units"
+            value={lstmUnits}
+            onChange={(e, v) => setLstmUnits(v)}
+            min={64}
+            max={512}
+            step={32}
+          />
+        </div>
       </div>
 
       {/* Training Parameters */}
-      <Typography variant="h5" className="!mt-6 !font-medium" gutterBottom>
-        Training Parameters
-      </Typography>
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <CustomSlider
-          label="Test Size"
-          value={testSize}
-          onChange={(e, v) => setTestSize(v)}
-          min={0.1}
-          max={0.5}
-          step={0.05}
-        />
-        <TextField
-          label="Random State"
-          type="number"
-          size="small"
-          value={randomState}
-          onChange={(e) => setRandomState(parseInt(e.target.value))}
-          InputProps={{ inputProps: { step: 1, min: 1 } }}
-        />
+      <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+        <Typography variant="subtitle1" className="!font-medium !mb-3 !text-gray-800">
+          Training Parameters
+        </Typography>
+        <div className="grid grid-cols-2 gap-4">
+          <TextField
+            label="Test Size"
+            type="number"
+            size="small"
+            value={testSize}
+            onChange={(e) => setTestSize(parseFloat(e.target.value))}
+            InputProps={{ inputProps: { step: 0.05, min: 0.1, max: 0.5 } }}
+            helperText="Fraction of data for testing"
+          />
+          <TextField
+            label="Random State"
+            type="number"
+            size="small"
+            value={randomState}
+            onChange={(e) => setRandomState(parseInt(e.target.value))}
+            InputProps={{ inputProps: { step: 1, min: 0, max: 1000 } }}
+            helperText="Random seed for reproducibility"
+          />
+        </div>
       </div>
 
       {/* Generate Button */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-4">
         <Button
           variant="contained"
-          size="large"
+          size="medium"
           onClick={handleGenerateSMILES}
           disabled={loading || !trainData || !smilesColumn}
-          className="!bg-primary-btn !text-white !font-medium !px-8 !py-3"
+          className="!bg-primary-btn !text-white !font-medium !px-6 !py-2 !text-sm"
         >
-          {loading ? "Generating..." : "Generate SMILES"}
+          {loading ? "Generating..." : "GENERATE SMILES"}
         </Button>
       </div>
 
       {/* Progress Bar */}
       {loading && (
-        <div className="mb-6">
+        <div className="mb-4">
           <Progress
             value={progress}
             shadow
@@ -482,45 +573,59 @@ function SMILESGeneration({ csvData }) {
             status="secondary"
             striped
           />
-          <p className="text-center mt-2 text-gray-600">
-            Training AutoVAE model and generating SMILES...
+          <p className="text-center mt-2 text-gray-600 text-sm">
+            {progress < 100 ? "Training VAE and generating SMILES..." : "Generation complete!"}
           </p>
         </div>
       )}
 
       {/* Results Display */}
       {results && (
-        <div className="mt-8">
-          <Typography variant="h4" className="!font-medium !mb-6" gutterBottom>
-            Generation Results
+        <div className="mt-6">
+          <Typography variant="h6" className="!font-semibold !mb-4 !text-gray-800" gutterBottom>
+            SMILES Generation Results
           </Typography>
 
           {/* Summary Statistics */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <Typography variant="h6" className="!font-medium">
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+              <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
                 Total Generated
               </Typography>
-              <Typography variant="h4" className="!text-blue-600">
-                {results.total_generated || 0}
+              <Typography variant="h6" className="!text-blue-600 !font-bold">
+                {Array.isArray(results) ? results.length : (results.generated_smiles ? results.generated_smiles.length : 0)}
               </Typography>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <Typography variant="h6" className="!font-medium">
+            <div className="bg-green-50 p-3 rounded-md border border-green-200">
+              <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
                 Valid SMILES
               </Typography>
-              <Typography variant="h4" className="!text-green-600">
-                {results.valid_smiles || 0}
+              <Typography variant="h6" className="!text-green-600 !font-bold">
+                {Array.isArray(results) ? results.filter(r => r.smiles && r.smiles.trim()).length : 0}
               </Typography>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <Typography variant="h6" className="!font-medium">
-                Ring Structures
+            <div className="bg-purple-50 p-3 rounded-md border border-purple-200">
+              <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
+                Generation Rate
               </Typography>
-              <Typography variant="h4" className="!text-purple-600">
-                {results.ring_structures || 0}
+              <Typography variant="h6" className="!text-purple-600 !font-bold">
+                {Array.isArray(results) && results.length > 0 ? 
+                  `${((results.filter(r => r.smiles && r.smiles.trim()).length / results.length) * 100).toFixed(1)}%` : '0%'}
               </Typography>
             </div>
+          </div>
+
+          {/* Download Button */}
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outlined"
+              size="medium"
+              startIcon={<DownloadIcon />}
+              onClick={handleDownloadResults}
+              className="!border-primary-btn !text-primary-btn !font-medium"
+            >
+              Download Results
+            </Button>
           </div>
 
           {/* Generated SMILES Table */}
@@ -616,7 +721,7 @@ function SMILESGeneration({ csvData }) {
 
       {/* Help Button */}
       <button
-        className="fixed bottom-5 right-5 bg-primary-btn text-2xl font-black text-white rounded-full p-4 py-2 shadow-lg"
+        className="fixed bottom-20 right-5 bg-primary-btn text-xl font-bold text-white rounded-full w-10 h-10 shadow-lg hover:bg-opacity-90 transition-all flex items-center justify-center"
         onClick={openModal}
       >
         ?

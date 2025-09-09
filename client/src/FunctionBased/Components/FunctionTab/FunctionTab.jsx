@@ -33,7 +33,7 @@ const StyledTreeItem = styled(TreeItem)(({ theme }) => ({
       color: '#FFFFFF',
     },
     '&:hover': {
-      backgroundColor: '#0A864B',
+      backgroundColor: '#097045',
     },
   },
   '& .MuiTreeItem-label': {
@@ -247,10 +247,18 @@ const functionTreeData = [
       },
       {
         id: '8-6',
-        label: 'SMILES Structure',
+        label: 'SMILES to SAS',
       },
       {
         id: '8-7',
+        label: 'SMILES to DFT',
+      },
+      {
+        id: '8-8',
+        label: 'SMILES Structure',
+      },
+      {
+        id: '8-9',
         label: 'Best Scaler',
       },
     ],
@@ -276,6 +284,32 @@ function FunctionTab() {
     setExpanded(safeExpanded);
   }, [dispatch]);
 
+  // Listen for custom events from chatbot
+  useEffect(() => {
+    const handleFunctionSelected = (event) => {
+      const { functionId, expandedNodes } = event.detail;
+      console.log('FunctionTab received function selection:', functionId);
+      setSelected(functionId);
+      dispatch(setActiveFunction(functionId));
+      setExpanded(expandedNodes);
+    };
+
+    const handleForceFunctionSelection = (event) => {
+      const { nodeId, label } = event.detail;
+      console.log('FunctionTab received force selection:', nodeId, label);
+      setSelected(nodeId);
+      dispatch(setActiveFunction(label));
+      localStorage.setItem('activeFunction', label);
+    };
+
+    window.addEventListener('functionSelected', handleFunctionSelected);
+    window.addEventListener('forceFunctionSelection', handleForceFunctionSelection);
+    return () => {
+      window.removeEventListener('functionSelected', handleFunctionSelected);
+      window.removeEventListener('forceFunctionSelection', handleForceFunctionSelection);
+    };
+  }, [dispatch]);
+
   // Fixed event handlers with correct MUI X Tree View API
   const handleToggle = (event, nodeIds) => {
     // Ensure nodeIds is always an array
@@ -288,8 +322,10 @@ function FunctionTab() {
     localStorage.setItem('expandedNodes', JSON.stringify(normalizedNodeIds));
   };
 
-  const handleSelect = (event, nodeId) => {
-    if (!nodeId) return;
+  const handleSelect = (event, nodeIds) => {
+    // nodeIds is an array in the new API
+    if (!nodeIds || nodeIds.length === 0) return;
+    const nodeId = nodeIds[0]; // Take the first selected item
     setSelected(nodeId);
     dispatch(setActiveFunction(nodeId));
     localStorage.setItem('activeFunction', nodeId);
@@ -313,6 +349,7 @@ function FunctionTab() {
   const handleItemClick = (event, nodeId) => {
     const label = getLabelFromNodeId(nodeId);
     if (label) {
+      setSelected(nodeId);
       dispatch(setActiveFunction(label));
       localStorage.setItem('activeFunction', label);
     }
@@ -329,6 +366,9 @@ function FunctionTab() {
         </div>
       }
       onClick={(event) => handleItemClick(event, nodes.id)}
+      sx={{
+        backgroundColor: selected === nodes.id ? '#0A864B' : 'transparent',
+      }}
     >
       {Array.isArray(nodes.children)
         ? nodes.children.map((node) => renderTree(node))
@@ -341,14 +381,12 @@ function FunctionTab() {
       {activeCsvFile ? (
         <SimpleTreeView
           className="text-gray-200"
-          selectedItems={selected}
-          expandedItems={expanded}
+          expanded={expanded}
+          onExpansionChange={handleToggle}
           slots={{
             collapseIcon: ChevronRightIcon,
             expandIcon: ExpandMoreIcon,
           }}
-          onExpandedItemsChange={handleToggle}
-          onSelectedItemsChange={handleSelect}
         >
           {functionTreeData.map((node) => renderTree(node))}
         </SimpleTreeView>

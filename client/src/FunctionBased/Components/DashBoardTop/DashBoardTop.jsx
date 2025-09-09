@@ -2,7 +2,6 @@ import { Button, Popover, User } from "@nextui-org/react";
 import React from "react";
 import { FiLogOut } from "react-icons/fi";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { RxQuestionMark } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { setShowLeftSideBar } from "../../../Slices/SideBarSlice";
@@ -27,8 +26,6 @@ function DashBoardTop() {
         </Link>
       </div>
       <div className="flex items-center gap-2">
-        <RxQuestionMark color="white" size={"22"} className="cursor-pointer" />
-
         <div>
           <Popover>
             <Popover.Trigger>

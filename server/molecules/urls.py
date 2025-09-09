@@ -1,5 +1,7 @@
 from django.urls import path
 
+from molecules.views.Psi4DFT import Psi4DFTView
+from molecules.views.SAScore import SmilesSAScoreView
 from molecules.views.generate import SmilesGenerationView, SmilesGenerationStatusView
 from molecules.views.iupac import SmilesIupacConvertView, SmilesIupacStatusView
 from molecules.views.scaler import ScalerEvaluationView
@@ -16,4 +18,7 @@ urlpatterns = [
     path("smiles-generation/status/<str:task_id>/", SmilesGenerationStatusView.as_view(), name="smiles_gen_status"),
     path("organic-check/", organic_check_view),
     path('scale-evaluate/', ScalerEvaluationView.as_view(), name='scaler-evaluation'),
+    path("smiles-sa-score/", SmilesSAScoreView.as_view(), name="smiles-sa-score"),
+    path("smiles-dft/", Psi4DFTView.as_view(), name="psi4-dft"),
+
 ]

@@ -9,7 +9,8 @@ import {
   FormControlLabel,
   Radio,
   LinearProgress,
-  Box
+  Box,
+  Chip
 } from "@mui/material";
 import { Progress, Modal } from "@nextui-org/react";
 import { toast } from "react-toastify";
@@ -17,16 +18,17 @@ import SingleDropDown from "../../../Components/SingleDropDown/SingleDropDown";
 import AgGridAutoDataComponent from "../../../Components/AgGridComponent/AgGridAutoDataComponent";
 import Docs from "../../../../Docs/Docs";
 
-function SMILEStoIUPAC({ csvData }) {
+function SMILESToSCS({ csvData }) {
   // Configuration state
   const [smilesColumn, setSmilesColumn] = useState("");
-  const [processingMode, setProcessingMode] = useState("batch"); // batch, individual
+  const [processingMode, setProcessingMode] = useState("individual"); // individual, batch
   const [batchSize, setBatchSize] = useState(50);
   const [delayBetweenRequests, setDelayBetweenRequests] = useState(0.2);
   
   // Individual SMILES input
   const [singleSMILES, setSingleSMILES] = useState("");
-    // UI state
+  
+  // UI state
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentProcessing, setCurrentProcessing] = useState("");
@@ -76,7 +78,7 @@ function SMILEStoIUPAC({ csvData }) {
           return 95;
         });
       }, 1000);
-      return () => clearInterval(interval);
+      return () => clearInterval(pollIntervalRef.current);
     }
   }, [loading]);
 
@@ -86,24 +88,28 @@ function SMILEStoIUPAC({ csvData }) {
       checkTaskStatus(taskId);
     }, 3000);
   };
+
   // Check task status
   const checkTaskStatus = async (taskId) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APP_API_URL}/api/smiles-iupac/status/${taskId}/`,
+        `${import.meta.env.VITE_APP_API_URL}/api/smiles-scs/status/${taskId}/`,
         { method: "GET" }
-      );      const data = await response.json();
+      );
+      const data = await response.json();
       
       if (data.status === "SUCCESS") {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
         setLoading(false);
-        setProgress(100);        // Check if we actually have results - handle different response formats
+        setProgress(100);
+        
+        // Check if we actually have results
         let hasResults = false;
         
         if (data.results && data.results.length > 0) {
           hasResults = true;
-        } else if (data.smiles && data.iupac) {
+        } else if (data.smiles && data.scs_score !== undefined) {
           hasResults = true;
         } else if (Object.keys(data).length > 1) {
           hasResults = true;
@@ -111,7 +117,7 @@ function SMILEStoIUPAC({ csvData }) {
         
         if (!hasResults) {
           console.warn("No results found in successful response");
-          toast.warning("Conversion completed but no results were found");
+          toast.warning("SCS calculation completed but no results were found");
           setCurrentProcessing("");
           return;
         }
@@ -122,59 +128,53 @@ function SMILEStoIUPAC({ csvData }) {
           const transformedResults = {
             summary: {
               total_smiles: data.total || 0,
-              successful_conversions: data.results?.length || 0,
-              failed_conversions: (data.total || 0) - (data.results?.length || 0),
-              success_rate: data.total ? Math.round(((data.results?.length || 0) / data.total) * 100) : 0
+              successful_calculations: data.results?.length || 0,
+              failed_calculations: (data.total || 0) - (data.results?.length || 0),
+              success_rate: data.total ? Math.round(((data.results?.length || 0) / data.total) * 100) : 0,
+              average_scs: data.results ? (data.results.reduce((sum, item) => sum + (item.scs_score || 0), 0) / data.results.length).toFixed(2) : 0
             },
-            converted_data: data.results || []          };
+            converted_data: data.results || []
+          };
           setResults(transformedResults);
         } else {
           // Handle individual SMILES result
-          
-          // Handle different response formats
           let individualResult;
           if (data.results && data.results.length > 0) {
-            // Array format: {results: [{smiles: "CCO", iupac: "ethanol"}]}
             individualResult = data.results[0];
-          } else if (data.smiles && data.iupac) {
-            // Direct format: {smiles: "CCO", iupac: "ethanol"}
+          } else if (data.smiles && data.scs_score !== undefined) {
             individualResult = data;
           } else if (data.status === "SUCCESS" && Object.keys(data).length > 1) {
-            // Try to extract directly from top-level data
             individualResult = {
               smiles: data.smiles || singleSMILES,
-              iupac: data.iupac || null,
-              pubchem_cid: data.pubchem_cid || null
+              scs_score: data.scs_score || null,
+              iupac_name: data.iupac_name || null
             };
           } else {
             individualResult = {
               smiles: singleSMILES,
-              iupac: "Not found"
+              scs_score: "Not calculated"
             };
           }
           
-          // For individual mode, create a simple structure without summary
           const transformedResults = {
             mode: "individual",
             smiles: individualResult?.smiles || singleSMILES,
-            // Backend returns 'iupac' but frontend expects 'iupac_name'
-            iupac_name: individualResult?.iupac || individualResult?.iupac_name || "Not found",
-            pubchem_cid: individualResult?.pubchem_cid || null,
-            // Don't include converted_data for individual mode to avoid confusion
+            scs_score: individualResult?.scs_score || "Not calculated",
+            iupac_name: individualResult?.iupac_name || null,
             raw_result: individualResult
           };
-            setResults(transformedResults);
+          setResults(transformedResults);
         }
         
         setCurrentProcessing("");
-        toast.success("SMILES to IUPAC conversion completed successfully!");
+        toast.success("SCS calculation completed successfully!");
       } else if (data.status === "FAILURE") {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
         setLoading(false);
         setProgress(100);
         setCurrentProcessing("");
-        toast.error(data.error || "Conversion failed");
+        toast.error(data.error || "SCS calculation failed");
       } else if (data.status === "PROGRESS") {
         // Update progress information
         if (data.current && data.total) {
@@ -182,7 +182,8 @@ function SMILEStoIUPAC({ csvData }) {
           setProgress(progressPercent);
           setCurrentProcessing(`Processing ${data.current}/${data.total}: ${data.current_smiles || ''}`);
         }
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.error("Polling error:", error);
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
@@ -190,22 +191,23 @@ function SMILEStoIUPAC({ csvData }) {
       setProgress(100);
       setCurrentProcessing("");
       
-      // If this was an individual conversion, try to still show result
+      // If this was an individual calculation, try to still show result
       if (processingMode === "individual") {
         const transformedResults = {
           mode: "individual",
           smiles: singleSMILES,
-          iupac_name: "Error: Could not convert",
-          error: "Network error occurred during conversion"
+          scs_score: "Error: Could not calculate",
+          error: "Network error occurred during calculation"
         };
         setResults(transformedResults);
       }
       
-      toast.error("Error checking conversion status");
+      toast.error("Error checking calculation status");
     }
   };
-  // Handle batch SMILES conversion
-  const handleBatchConversion = async () => {
+
+    // Handle batch SMILES conversion
+  const handleBatchCalculation = async () => {
     if (!smilesColumn) {
       toast.error("Please select a SMILES column");
       return;
@@ -213,7 +215,7 @@ function SMILEStoIUPAC({ csvData }) {
 
     resetOperationState();
     setLoading(true);
-    setCurrentProcessing("Starting batch conversion...");
+    setCurrentProcessing("Starting batch SCS calculation...");
 
     const requestData = {
       mode: "batch",
@@ -227,7 +229,7 @@ function SMILEStoIUPAC({ csvData }) {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APP_API_URL}/api/smiles-iupac/convert/?async=true`,
+        `${import.meta.env.VITE_APP_API_URL}/api/smiles-scs/calculate/?async=true`,
         {
           method: "POST",
           headers: {
@@ -242,22 +244,23 @@ function SMILEStoIUPAC({ csvData }) {
       if (response.ok && data.task_id) {
         setTaskId(data.task_id);
         startPolling(data.task_id);
-        toast.info("SMILES to IUPAC conversion started. This may take several minutes...");
+        toast.info("SCS calculation started. This may take several minutes...");
       } else {
         setLoading(false);
         setProgress(100);
         setCurrentProcessing("");
-        toast.error(data.error || "Failed to start conversion");
+        toast.error(data.error || "Failed to start calculation");
       }
     } catch (error) {
       setLoading(false);
       setProgress(100);
       setCurrentProcessing("");
-      toast.error("Error starting conversion: " + error.message);
+      toast.error("Error starting calculation: " + error.message);
     }
   };
-  // Handle single SMILES conversion
-  const handleSingleConversion = async () => {
+
+  // Handle single SMILES calculation
+  const handleSingleCalculation = async () => {
     if (!singleSMILES.trim()) {
       toast.error("Please enter a SMILES string");
       return;
@@ -265,74 +268,92 @@ function SMILEStoIUPAC({ csvData }) {
 
     resetOperationState();
     setLoading(true);
-    setCurrentProcessing(`Converting: ${singleSMILES}`);    const requestData = {
+    setCurrentProcessing(`Calculating SCS for: ${singleSMILES}`);
+
+    const requestData = {
       mode: "single",
       smiles: singleSMILES.trim(),
       config: {
         delay_between_requests: delayBetweenRequests
       }
-    };    try {
+    };
+
+    try {
       // Try without async first for direct response
       const response = await fetch(
-        `${import.meta.env.VITE_APP_API_URL}/api/smiles-iupac/convert/`,
+        `${import.meta.env.VITE_APP_API_URL}/api/smiles-scs/calculate/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestData),
-        }      );      const data = await response.json();
+        }
+      );
+      const data = await response.json();
       
       if (response.ok) {
         if (data.task_id) {
           // Start polling for async task
           startPolling(data.task_id);
-          toast.info("SMILES conversion started...");
-        } else if (data.smiles && data.iupac) {
+          toast.info("SCS calculation started...");
+        } else if (data.smiles && data.scs_score !== undefined) {
           // Backend returned result directly without async task
-
-          
-          // Handle direct result format
           setLoading(false);
           setProgress(100);
           
-          // Transform direct response to expected format
           const transformedResults = {
             mode: "individual",
             smiles: data.smiles || singleSMILES,
-            iupac_name: data.iupac || "Not found",
-            pubchem_cid: data.pubchem_cid || null,
+            scs_score: data.scs_score || "Not calculated",
+            iupac_name: data.iupac_name || null,
             raw_result: data
           };
           
           setResults(transformedResults);
           setCurrentProcessing("");
-          toast.success("SMILES to IUPAC conversion completed successfully!");
+          toast.success("SCS calculation completed successfully!");
         } else {
           setLoading(false);
           setProgress(100);
           setCurrentProcessing("");
           toast.error("Invalid response format");
-
         }
       } else {
         setLoading(false);
         setProgress(100);
         setCurrentProcessing("");
-        toast.error(data.error || "Failed to convert SMILES");
+        toast.error(data.error || "Failed to calculate SCS");
       }
     } catch (error) {
       setLoading(false);
       setProgress(100);
       setCurrentProcessing("");
-      toast.error("Error converting SMILES: " + error.message);
+      toast.error("Error calculating SCS: " + error.message);
     }
   };
+
+  // Helper function to get complexity level and color
+  const getComplexityLevel = (scsScore) => {
+    if (typeof scsScore !== 'number') return { level: 'Unknown', color: 'default' };
+    
+    if (scsScore >= 0 && scsScore < 3) {
+      return { level: 'Low', color: 'success' };
+    } else if (scsScore >= 3 && scsScore < 6) {
+      return { level: 'Medium', color: 'warning' };
+    } else if (scsScore >= 6 && scsScore <= 10) {
+      return { level: 'High', color: 'error' };
+    } else {
+      return { level: 'Invalid', color: 'default' };
+    }
+  };
+
+
 
   return (
     <div className="my-6 w-full max-w-7xl mx-auto">
       <Typography variant="h5" className="!font-semibold !mb-4 text-gray-800" gutterBottom>
-        SMILES to IUPAC Name Converter
+        SMILES to Synthetic Complexity Score (SCS) Calculator
       </Typography>
       
       {/* Processing Mode Selection */}
@@ -393,7 +414,7 @@ function SMILEStoIUPAC({ csvData }) {
               value={delayBetweenRequests}
               onChange={(e) => setDelayBetweenRequests(parseFloat(e.target.value))}
               InputProps={{ inputProps: { step: 0.1, min: 0.1, max: 5.0 } }}
-              helperText="Delay to avoid PubChem rate limits"
+              helperText="Delay to avoid rate limits"
             />
           </div>
         </div>
@@ -409,7 +430,7 @@ function SMILEStoIUPAC({ csvData }) {
             value={singleSMILES}
             onChange={(e) => setSingleSMILES(e.target.value)}
             placeholder="e.g., CCO (ethanol)"
-            helperText="Enter a single SMILES string to convert to IUPAC name"
+            helperText="Enter a single SMILES string to calculate synthetic complexity score"
             className="!mb-3"
           />
           
@@ -433,16 +454,16 @@ function SMILEStoIUPAC({ csvData }) {
         </div>
       )}
 
-      {/* Convert Button */}
+      {/* Calculate Button */}
       <div className="flex justify-end mb-4">
         <Button
           variant="contained"
           size="medium"
-          onClick={processingMode === "batch" ? handleBatchConversion : handleSingleConversion}
+          onClick={processingMode === "batch" ? handleBatchCalculation : handleSingleCalculation}
           disabled={loading || (processingMode === "batch" && !smilesColumn) || (processingMode === "individual" && !singleSMILES.trim())}
           className="!bg-primary-btn !text-white !font-medium !px-6 !py-2 !text-sm"
         >
-          {loading ? "Converting..." : "CONVERT TO IUPAC"}
+          {loading ? "Calculating..." : "CALCULATE SCS SCORE"}
         </Button>
       </div>
 
@@ -468,12 +489,12 @@ function SMILEStoIUPAC({ csvData }) {
       {results && (
         <div className="mt-6">
           <Typography variant="h6" className="!font-semibold !mb-4 !text-gray-800" gutterBottom>
-            IUPAC Conversion Results
+            SCS Calculation Results
           </Typography>
 
           {/* Summary Statistics for Batch */}
           {processingMode === "batch" && results.summary && (
-            <div className="grid grid-cols-4 gap-3 mb-4">
+            <div className="grid grid-cols-5 gap-3 mb-4">
               <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
                 <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
                   Total SMILES
@@ -484,18 +505,18 @@ function SMILEStoIUPAC({ csvData }) {
               </div>
               <div className="bg-green-50 p-3 rounded-md border border-green-200">
                 <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
-                  Successfully Converted
+                  Successfully Calculated
                 </Typography>
                 <Typography variant="h6" className="!text-green-600 !font-bold">
-                  {results.summary.successful_conversions || 0}
+                  {results.summary.successful_calculations || 0}
                 </Typography>
               </div>
               <div className="bg-red-50 p-3 rounded-md border border-red-200">
                 <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
-                  Failed Conversions
+                  Failed Calculations
                 </Typography>
                 <Typography variant="h6" className="!text-red-600 !font-bold">
-                  {results.summary.failed_conversions || 0}
+                  {results.summary.failed_calculations || 0}
                 </Typography>
               </div>
               <div className="bg-purple-50 p-3 rounded-md border border-purple-200">
@@ -506,6 +527,14 @@ function SMILEStoIUPAC({ csvData }) {
                   {results.summary.success_rate || 0}%
                 </Typography>
               </div>
+              <div className="bg-orange-50 p-3 rounded-md border border-orange-200">
+                <Typography variant="body2" className="!font-medium !text-gray-700 !mb-1">
+                  Avg SCS Score
+                </Typography>
+                <Typography variant="h6" className="!text-orange-600 !font-bold">
+                  {results.summary.average_scs || 0}
+                </Typography>
+              </div>
             </div>
           )}
 
@@ -513,7 +542,7 @@ function SMILEStoIUPAC({ csvData }) {
           {processingMode === "individual" && (
             <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
               <Typography variant="subtitle1" className="!font-medium !mb-3 !text-gray-800">
-                Individual IUPAC Conversion Result
+                Individual SCS Calculation Result
               </Typography>
               
               {results && (
@@ -524,16 +553,51 @@ function SMILEStoIUPAC({ csvData }) {
                       <span className="text-blue-600 font-mono">{results.smiles || "Not available"}</span>
                     </div>
                     <div className="flex">
-                      <span className="font-semibold w-32">IUPAC Name:</span>
-                      <span className="text-green-600 font-medium">{results.iupac_name || "Not found"}</span>
+                      <span className="font-semibold w-32">SCS Score:</span>
+                      <span className="text-green-600 font-medium text-xl">
+                        {typeof results.scs_score === 'number' ? results.scs_score.toFixed(2) : results.scs_score}
+                      </span>
                     </div>
-                    {results.pubchem_cid && (
+                    {typeof results.scs_score === 'number' && (
+                      <div className="flex items-center">
+                        <span className="font-semibold w-32">Complexity Level:</span>
+                        <Chip
+                          label={getComplexityLevel(results.scs_score).level}
+                          color={getComplexityLevel(results.scs_score).color}
+                          size="medium"
+                        />
+                      </div>
+                    )}
+                    {results.iupac_name && (
                       <div className="flex">
-                        <span className="font-semibold w-32">PubChem CID:</span>
-                        <span className="text-purple-600 font-medium">{results.pubchem_cid}</span>
+                        <span className="font-semibold w-32">IUPAC Name:</span>
+                        <span className="text-purple-600 font-medium">{results.iupac_name}</span>
                       </div>
                     )}
                   </div>
+                  
+                  {/* SCS Score Progress Bar */}
+                  {typeof results.scs_score === 'number' && (
+                    <div className="mt-4">
+                      <Typography variant="body2" className="!font-medium !text-gray-700 !mb-2">
+                        Complexity Scale (0 = Simple, 5 = Complex):
+                      </Typography>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 h-3 rounded-full transition-all duration-300"
+                          style={{ width: `${(results.scs_score / 5) * 100}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600 mt-1">
+                        <span>0</span>
+                        <span>1</span>
+                        <span>2</span>
+                        <span>3</span>
+                        <span>4</span>
+                        <span>5</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -543,10 +607,14 @@ function SMILEStoIUPAC({ csvData }) {
           {processingMode === "batch" && results.converted_data && results.converted_data.length > 0 && (
             <div className="mb-8">
               <Typography variant="h5" className="!font-medium !mb-4" gutterBottom>
-                Converted SMILES with IUPAC Names
+                Calculated SCS Scores
               </Typography>
-              <AgGridAutoDataComponent
-                rowData={results.converted_data}
+              
+                             <AgGridAutoDataComponent
+                 rowData={results.converted_data.map(item => ({
+                   ...item,
+                   complexity_level: getComplexityLevel(item.scs_score).level
+                 }))}
                 download={true}
                 height="400px"
                 rowHeight={40}
@@ -556,14 +624,14 @@ function SMILEStoIUPAC({ csvData }) {
             </div>
           )}
 
-          {/* Failed Conversions */}
-          {results.failed_conversions && results.failed_conversions.length > 0 && (
+          {/* Failed Calculations */}
+          {results.failed_calculations && results.failed_calculations.length > 0 && (
             <div className="mb-8">
               <Typography variant="h5" className="!font-medium !mb-4" gutterBottom>
-                Failed Conversions
+                Failed Calculations
               </Typography>
               <AgGridAutoDataComponent
-                rowData={results.failed_conversions}
+                rowData={results.failed_calculations}
                 download={true}
                 height="200px"
                 rowHeight={40}
@@ -606,11 +674,11 @@ function SMILEStoIUPAC({ csvData }) {
         closeButton
       >
         <div className="bg-white text-left rounded-lg shadow-lg px-6 overflow-auto">
-          <Docs section={"smilesIupac"} />
+          <Docs section={"smilesScs"} />
         </div>
       </Modal>
     </div>
   );
 }
 
-export default SMILEStoIUPAC;
+export default SMILESToSCS;

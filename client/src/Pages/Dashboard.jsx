@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import DashBoardLeft from "../FunctionBased/Components/DashBoardLeft/DashBoardLeft";
 import DashBoardRight from "../FunctionBased/Components/DashBoardRight/DashBoardRight";
 import DashBoardTop from "../FunctionBased/Components/DashBoardTop/DashBoardTop";
+import Chatbot from "../Components/Chatbot/Chatbot";
 import { setActiveFunction } from "../Slices/SideBarSlice";
 
 export default function Dashboard() {
@@ -20,6 +21,7 @@ export default function Dashboard() {
         <DashBoardLeft />
         <DashBoardRight />
       </div>
+      <Chatbot />
     </div>
   );
 }

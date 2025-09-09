@@ -54,6 +54,8 @@ import Controls from "../NodeBased/components/Controls/Controls";
 import EditorTopbar from "../NodeBased/components/EditorTopbar/EditorTopbar";
 import OutputPanel from "../NodeBased/components/OutputPanel/OutputPanel";
 import Sidebar from "../NodeBased/components/Sidebar/Sidebar";
+import Chatbot from "../Components/Chatbot/Chatbot";
+
 import { setNodeType, setRightSidebarData } from "../Slices/SideBarSlice";
 import {
   handleAddModify,
@@ -580,6 +582,8 @@ function EditorPage() {
           <OutputPanel />
         </Pan>
       </PanelGroup>
+
+      <Chatbot />
     </div>
   );
 }

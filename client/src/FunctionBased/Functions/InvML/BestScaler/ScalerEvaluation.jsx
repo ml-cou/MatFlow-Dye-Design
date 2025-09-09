@@ -695,7 +695,7 @@ export default function ScalerEvaluationPage({ csvData }) {
                 <a
                   href={`data:text/csv;base64,${res.scaled_dataset_base64}`}
                   download="scaled_dataset.csv"
-                  className="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  className="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   <svg
                     className="w-5 h-5 mr-2"
@@ -718,7 +718,7 @@ export default function ScalerEvaluationPage({ csvData }) {
                 <a
                   href={`data:text/csv;base64,${res.ranking_csv_base64}`}
                   download="scaler_ranking.csv"
-                  className="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  className="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   <svg
                     className="w-5 h-5 mr-2"
@@ -743,7 +743,7 @@ export default function ScalerEvaluationPage({ csvData }) {
       
       {/* Floating Help Button */}
       <button
-        className="fixed bottom-5 right-5 bg-green-600 hover:bg-green-700 text-2xl font-black text-white rounded-full p-4 py-2 shadow-lg transition-colors duration-200"
+        className="fixed bottom-20 right-5 bg-primary-btn text-xl font-bold text-white rounded-full w-10 h-10 shadow-lg hover:bg-opacity-90 transition-all flex items-center justify-center"
         onClick={openModal}
       >
         ?

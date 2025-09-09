@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Chatbot from "../Components/Chatbot/Chatbot";
 
 function Login() {
   const navigate = useNavigate();
@@ -116,6 +117,7 @@ function Login() {
           </form>
         </div>
       </div>
+      <Chatbot />
     </div>
   );
 }

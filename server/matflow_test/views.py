@@ -387,7 +387,7 @@ def deploy_data(request):
 
     # Step 5: Transform target_var to match standardized column names
     if isinstance(target_var_original, str):
-        target_var = target_var_original.strip().capitalize()
+        target_var = target_var_original.strip()
     else:
         logger.error("Invalid type for target_var. It should be a string.")
         return JsonResponse(

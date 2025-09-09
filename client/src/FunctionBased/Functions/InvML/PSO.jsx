@@ -873,31 +873,20 @@ function PSO({ csvData }) {
                       </div>
 
                       <div className="mb-24">
-                        <div className="flex justify-between items-center mb-3">
-                          <Typography
-                            variant="subtitle1"
-                            className="!font-semibold text-center text-gray-600"
-                            gutterBottom
-                          >
-                            Solution for Target Value{' '}
-                            {resultItem.target_value}
-                          </Typography>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<span>📥</span>}
-                            onClick={() => openDownloadOptions([bestSolutionRow], `Best_Solution_${resultItem.target_value}`)}
-                            sx={{ minWidth: '120px' }}
-                          >
-                            Download Options
-                          </Button>
-                        </div>
+                                              <Typography
+                        variant="subtitle1"
+                        className="!font-semibold text-center text-gray-600 mb-3"
+                        gutterBottom
+                      >
+                        Solution for Target Value{' '}
+                        {resultItem.target_value}
+                      </Typography>
                         <AgGridAutoDataComponent
                           rowData={[bestSolutionRow]}
                           rowHeight={50}
                           paginationPageSize={10}
                           headerHeight={50}
-                          download={false}
+                          download={true}
                           height="200px"
                         />
                       </div>
@@ -911,15 +900,13 @@ function PSO({ csvData }) {
                           >
                             Comparison Table
                           </Typography>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<span>📥</span>}
+                          <button
                             onClick={() => openDownloadOptions(comparisonTableRows, 'Comparison_Table')}
-                            sx={{ minWidth: '120px' }}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-btn bg-white border border-primary-btn rounded-md hover:bg-primary-btn hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-btn"
                           >
+                            <span>📥</span>
                             Download Options
-                          </Button>
+                          </button>
                         </div>
                         <AgGridAutoDataComponent
                           rowData={comparisonTableRows}
@@ -957,23 +944,19 @@ function PSO({ csvData }) {
                                         className="w-full max-w-4xl h-auto border rounded-md shadow-sm"
                                       />
                                       <div className="flex justify-center gap-3 mt-3">
-                                        <Button
-                                          variant="outlined"
-                                          size="small"
-                                          startIcon={<span>📥</span>}
+                                        <button
                                           onClick={() =>
                                             handleDownloadImage(
                                               resultItem.graphs[graphKey],
                                               'png'
                                             )
                                           }
+                                          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-btn bg-white border border-primary-btn rounded-md hover:bg-primary-btn hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-btn"
                                         >
+                                          <span>📥</span>
                                           Download
-                                        </Button>
-                                        <Button
-                                          variant="outlined"
-                                          size="small"
-                                          startIcon={<span>🔍</span>}
+                                        </button>
+                                        <button
                                           onClick={() => {
                                             const modal = document.createElement('div');
                                             modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
@@ -984,24 +967,24 @@ function PSO({ csvData }) {
                                             modal.appendChild(img);
                                             document.body.appendChild(modal);
                                           }}
+                                          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-btn"
                                         >
+                                          <span>🔍</span>
                                           View Full Size
-                                        </Button>
+                                        </button>
                                       </div>
                                     </div>
                                 )
                               )}
                             </div>
                             <div className="flex justify-center gap-4 mt-6">
-                              <Button
-                                variant="contained"
-                                color="secondary"
-                                startIcon={<span>📦</span>}
+                              <button
                                 onClick={() => handleDownloadAllAsZip(resultItem.graphs, 'associated')}
-                                sx={{ mb: 2 }}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-btn border border-transparent rounded-md hover:bg-opacity-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-btn mb-2"
                               >
+                                <span>📦</span>
                                 Download All as ZIP
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         )}
@@ -1095,7 +1078,7 @@ function PSO({ csvData }) {
                     onClick={() => openDownloadOptions(responseData.best_solutions, 'Consolidated_Best_Solutions')}
                     sx={{ minWidth: '120px' }}
                   >
-                    Download Options
+                    Download 
                   </Button>
                 </div>
                 <AgGridAutoDataComponent
@@ -1117,131 +1100,190 @@ function PSO({ csvData }) {
         onClose={() => setDownloadOptionsOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e5e7eb'
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            backgroundColor: '#f8fafc',
+            borderBottom: '1px solid #e5e7eb',
+            padding: '20px 24px 16px'
+          }}
+        >
           <div className="flex justify-between items-center">
-            <span>Download Options - {currentTableTitle}</span>
-            <Chip 
-              label={`${currentTableData?.length || 0} total rows`} 
-              color="primary" 
-              size="small" 
-            />
+            <span className="text-lg font-semibold text-gray-900">Download {currentTableTitle}</span>
+            <div 
+              className="px-3 py-1 rounded-full text-sm font-medium"
+              style={{ 
+                backgroundColor: '#00ba7c', 
+                color: 'white' 
+              }}
+            >
+              {currentTableData?.length || 0} total rows
+            </div>
           </div>
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <FormControl component="fieldset" fullWidth>
-              <FormLabel component="legend">Download Type</FormLabel>
-              <RadioGroup
-                value={downloadType}
-                onChange={(e) => setDownloadType(e.target.value)}
-              >
-                <FormControlLabel
-                  value="all"
-                  control={<Radio />}
-                  label={`Download all ${currentTableData?.length || 0} rows`}
-                />
-                <FormControlLabel
-                  value="top"
-                  control={<Radio />}
-                  label="Download top N rows"
-                />
-                <FormControlLabel
-                  value="custom"
-                  control={<Radio />}
-                  label="Download custom range"
-                />
-              </RadioGroup>
-            </FormControl>
+        <DialogContent sx={{ padding: '24px' }}>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Download Type
+              </label>
+              <div className="space-y-3">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="downloadType"
+                    value="all"
+                    checked={downloadType === 'all'}
+                    onChange={(e) => setDownloadType(e.target.value)}
+                    className="w-4 h-4 text-primary-btn border-gray-300 focus:ring-primary-btn"
+                  />
+                  <span className="ml-3 text-sm text-gray-700">
+                    Download all {currentTableData?.length || 0} rows
+                  </span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="downloadType"
+                    value="top"
+                    checked={downloadType === 'top'}
+                    onChange={(e) => setDownloadType(e.target.value)}
+                    className="w-4 h-4 text-primary-btn border-gray-300 focus:ring-primary-btn"
+                  />
+                  <span className="ml-3 text-sm text-gray-700">
+                    Download top N rows
+                  </span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="downloadType"
+                    value="custom"
+                    checked={downloadType === 'custom'}
+                    onChange={(e) => setDownloadType(e.target.value)}
+                    className="w-4 h-4 text-primary-btn border-gray-300 focus:ring-primary-btn"
+                  />
+                  <span className="ml-3 text-sm text-gray-700">
+                    Download custom range
+                  </span>
+                </label>
+              </div>
+            </div>
 
             {downloadType === 'top' && (
-              <Box sx={{ mt: 3 }}>
-                <TextField
-                  label="Number of rows"
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Number of rows
+                </label>
+                <input
                   type="number"
                   value={downloadRowCount}
                   onChange={(e) => setDownloadRowCount(Math.max(1, parseInt(e.target.value) || 1))}
-                  inputProps={{ min: 1, max: currentTableData?.length || 1 }}
-                  fullWidth
-                  size="small"
-                  helperText={`Maximum: ${currentTableData?.length || 0} rows`}
+                  min={1}
+                  max={currentTableData?.length || 1}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-btn focus:border-transparent"
+                  placeholder="Enter number of rows"
                 />
-              </Box>
+                <p className="text-xs text-gray-500">
+                  Maximum: {currentTableData?.length || 0} rows
+                </p>
+              </div>
             )}
 
             {downloadType === 'custom' && (
-              <Box sx={{ mt: 3 }}>
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <TextField
-                    label="Start row"
-                    type="number"
-                    value={downloadStartRow}
-                    onChange={(e) => {
-                      const value = Math.max(1, parseInt(e.target.value) || 1);
-                      setDownloadStartRow(value);
-                      if (value > downloadEndRow) {
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start row
+                    </label>
+                    <input
+                      type="number"
+                      value={downloadStartRow}
+                      onChange={(e) => {
+                        const value = Math.max(1, parseInt(e.target.value) || 1);
+                        setDownloadStartRow(value);
+                        if (value > downloadEndRow) {
+                          setDownloadEndRow(value);
+                        }
+                      }}
+                      min={1}
+                      max={currentTableData?.length || 1}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-btn focus:border-transparent"
+                      placeholder="Start row"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End row
+                    </label>
+                    <input
+                      type="number"
+                      value={downloadEndRow}
+                      onChange={(e) => {
+                        const value = Math.min(
+                          currentTableData?.length || 1,
+                          Math.max(downloadStartRow, parseInt(e.target.value) || downloadStartRow)
+                        );
                         setDownloadEndRow(value);
-                      }
-                    }}
-                    inputProps={{ min: 1, max: currentTableData?.length || 1 }}
-                    fullWidth
-                    size="small"
-                  />
-                  <TextField
-                    label="End row"
-                    type="number"
-                    value={downloadEndRow}
-                    onChange={(e) => {
-                      const value = Math.min(
-                        currentTableData?.length || 1,
-                        Math.max(downloadStartRow, parseInt(e.target.value) || downloadStartRow)
-                      );
-                      setDownloadEndRow(value);
-                    }}
-                    inputProps={{ min: downloadStartRow, max: currentTableData?.length || 1 }}
-                    fullWidth
-                    size="small"
-                  />
+                      }}
+                      min={downloadStartRow}
+                      max={currentTableData?.length || 1}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-btn focus:border-transparent"
+                      placeholder="End row"
+                    />
+                  </div>
                 </div>
-                <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                <p className="text-xs text-gray-500">
                   Will download rows {downloadStartRow} to {downloadEndRow} ({downloadEndRow - downloadStartRow + 1} rows)
-                </Typography>
-              </Box>
+                </p>
+              </div>
             )}
+          </div>
 
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="body2" color="textSecondary">
-                <strong>Summary:</strong> {(() => {
-                  switch (downloadType) {
-                    case 'top':
-                      return `Will download top ${Math.min(downloadRowCount, currentTableData?.length || 0)} rows`;
-                    case 'custom':
-                      return `Will download rows ${downloadStartRow} to ${downloadEndRow} (${Math.max(0, downloadEndRow - downloadStartRow + 1)} rows)`;
-                    case 'all':
-                    default:
-                      return `Will download all ${currentTableData?.length || 0} rows`;
-                  }
-                })()}
-              </Typography>
-            </Box>
-          </Box>
+          {/* Summary Section */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-sm text-gray-700">
+              <strong>Summary:</strong> {(() => {
+                switch (downloadType) {
+                  case 'top':
+                    return `Will download top ${Math.min(downloadRowCount, currentTableData?.length || 0)} rows`;
+                  case 'custom':
+                    return `Will download rows ${downloadStartRow} to ${downloadEndRow} (${Math.max(0, downloadEndRow - downloadStartRow + 1)} rows)`;
+                  case 'all':
+                  default:
+                    return `Will download all ${currentTableData?.length || 0} rows`;
+                }
+              })()}
+            </p>
+          </div>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDownloadOptionsOpen(false)}>
+        <DialogActions sx={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', backgroundColor: '#f8fafc' }}>
+          <button
+            onClick={() => setDownloadOptionsOpen(false)}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-btn"
+          >
             Cancel
-          </Button>
-          <Button onClick={resetDownloadOptions} color="secondary">
-            Reset
-          </Button>
-          <Button onClick={handleDownloadWithOptions} variant="contained" color="primary">
+          </button>
+          <button
+            onClick={handleDownloadWithOptions}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-btn border border-transparent rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-btn"
+          >
             Download
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
 
       {/* DOCS */}
       <button
-        className="fixed bottom-5 right-5 bg-primary-btn text-2xl font-black text-white rounded-full p-4 py-2 shadow-lg"
+        className="fixed bottom-20 right-5 bg-primary-btn text-xl font-bold text-white rounded-full w-10 h-10 shadow-lg hover:bg-opacity-90 transition-all flex items-center justify-center"
         onClick={openModal}
       >
         ?
